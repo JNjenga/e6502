@@ -3,7 +3,7 @@
 6502 CPU emulator that uses the terminal as user interface.
 Developed for recreational and learing purposes.
 
-- The project is still being developed, might want to comeback after some time.
+> The project is still being developed, might want to comeback after some time.
 
 ## Demo
 
