@@ -1,4 +1,6 @@
+mod isa;
 mod lexer;
+mod cpu;
 
 fn main() {
     let mut lex = lexer::Lexer {tokens:Vec::new(), current_token:0};
