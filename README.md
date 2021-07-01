@@ -7,7 +7,9 @@ Developed for recreational and learing purposes.
 
 ## Demo
 
-Insert gif or link to demo
+This is what I am working towards:
+
+![Demo](/screenshots/demo.png)
  
 ## Features
 
