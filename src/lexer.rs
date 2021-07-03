@@ -21,8 +21,10 @@ pub enum TokenType
     NUMBER,
     OPERAND,
     LABEL,
+    LABEL_OPERAND,
     REGX,
     REGY,
+    REGA,
     EOF,
 
 }
@@ -40,6 +42,7 @@ pub struct Lexer
 {
     pub tokens : Vec<Token>,
     pub current_token: usize,
+    pub labels : HashMap<String, u16>,
 }
 
 #[allow(dead_code)]
@@ -73,6 +76,15 @@ impl Lexer
         Some(&self.tokens[self.current_token+1])
     }
 
+    pub fn nextx(&self, offset:usize) -> Option<&Token>
+    {
+        if self.current_token+offset >= self.tokens.len() {
+            return None;
+        }
+
+        Some(&self.tokens[self.current_token+offset])
+    }
+
     pub fn step(&mut self)
     {
         self.current_token += 1;
@@ -83,15 +95,278 @@ impl Lexer
         self.current_token += steps;
     }
 
+    pub fn get_operand_u8(&self) -> u8
+    {
+        if let Some(nt) = self.next()
+        {
+            if nt.ttype == TT::DOLLAR
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    return u8::from_str_radix(&nt2.tstring, 16).unwrap();
+                }
+                panic!("INVALID hex value after {} at {}", nt.tstring, nt.line_no);
+            }
+            if nt.ttype == TT::PERCENT
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    return u8::from_str_radix(&nt2.tstring, 2).unwrap();
+                }
+                panic!("INVALID bin value after {} at {}", nt.tstring, nt.line_no);
+            }
+
+            return u8::from_str_radix(&nt.tstring, 10).unwrap();
+        }
+
+        panic!("Unknown error");
+    }
+
+
+    pub fn get_operand_u16(&self) -> u16
+    {
+        if let Some(nt) = self.next()
+        {
+            if nt.ttype == TT::DOLLAR
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    return u16::from_str_radix(&nt2.tstring, 16).unwrap();
+                }
+                panic!("INVALID hex value after {} at {}", nt.tstring, nt.line_no);
+            }
+            if nt.ttype == TT::PERCENT
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    return u16::from_str_radix(&nt2.tstring, 2).unwrap();
+                }
+                panic!("INVALID bin value after {} at {}", nt.tstring, nt.line_no);
+            }
+
+            return u16::from_str_radix(&nt.tstring, 10).unwrap();
+        }
+
+        0
+    }
+
+    pub fn next_mode(&self) -> u32
+    {
+        if let Some(nt) = self.next()
+        {
+            if nt.ttype == TT::EOF
+            {
+                return Mode::IMP;
+            }
+            if nt.ttype == TT::LABEL
+            {
+                return Mode::IMP;
+            }
+
+            if nt.ttype == TT::HASH
+            {
+                return Mode::IMM;
+            }
+            if nt.ttype == TT::REGA
+            {
+                return Mode::ACC;
+            }
+            if nt.ttype == TT::BRACKETOPEN
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    if nt2.ttype == TT::UNKNOWN || nt2.ttype == TT::NUMBER
+                    {
+                        if let Some(nt3) = self.nextx(3)
+                        {
+                            if nt3.ttype == TT::BRACKETCLOSE
+                            {
+                                return Mode::INDY;
+                            }
+                            else
+                            {
+                                if let Some(nt4) = self.nextx(4)
+                                {
+                                    if nt4.ttype == TT::BRACKETCLOSE
+                                    {
+                                        return Mode::IND;
+                                    }
+                                    else if nt4.ttype == TT::REGX
+                                    {
+                                        return Mode::INDX;
+                                    }
+                                    return Mode::UNKNOWN;
+                                }
+                            }
+                        }
+                    }
+                    return Mode::UNKNOWN;
+                }
+                return Mode::UNKNOWN;
+            }
+            if let Some(t) = self.current()
+            {
+                if t.tstring == "BCC"
+                    || t.tstring == "BCS"
+                        || t.tstring == "BEQ"
+                        || t.tstring == "BMI"
+                        || t.tstring == "BNE"
+                        || t.tstring == "BPL"
+                        || t.tstring == "BVC"
+                        || t.tstring == "BVS"
+                        {
+                            return Mode::REL;
+                        }
+            }
+            if nt.ttype == TT::LABEL_OPERAND
+            {
+                if nt.ttype == TT::BRACKETOPEN
+                {
+
+                    return Mode::IND;
+                }
+                else
+                {
+                    return Mode::ABS;
+                }
+            }
+
+
+            // OPC $4400,X
+            if nt.ttype == TT::DOLLAR || nt.ttype == TT::PERCENT
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    if nt2.tstring.len() <= 2 && nt2.ttype == TT::UNKNOWN
+                    {
+                        if let Some(nt3) = self.nextx(3)
+                        {
+                            if nt3.ttype == TT::COMMA
+                            {
+                                if let Some(nt4) = self.nextx(4)
+                                {
+                                    if nt4.ttype == TT::REGX
+                                    {
+                                        return Mode::ZPX;
+                                    }
+                                    if nt4.ttype == TT::REGY
+                                    {
+                                        return Mode::ZPY;
+                                    }
+                                    return Mode::UNKNOWN;
+                                }
+                            }
+                            else
+                            {
+                                return Mode::ZP;
+                            }
+                        }
+                        else
+                        {
+                            return Mode::ZP;
+                        }
+                    }
+                    if nt2.tstring.len() >= 3
+                    {
+                        if let Some(nt3) = self.nextx(3)
+                        {
+                            if nt3.ttype == TT::COMMA
+                            {
+                                if let Some(nt4) = self.nextx(4)
+                                {
+                                    if nt4.ttype == TT::REGX
+                                    {
+                                        return Mode::ABSX;
+                                    }
+                                    if nt4.ttype == TT::REGY
+                                    {
+                                        return Mode::ABSY;
+                                    }
+                                }
+
+                                return Mode::UNKNOWN;
+                            }
+
+                            return Mode::ABS;
+                        }
+                        else
+                        {
+                            return Mode::ABS;
+                        }
+                    }
+                }
+            }
+
+            if nt.tstring.len() <= 3 && nt.ttype == TT::UNKNOWN || nt.ttype == TT::NUMBER
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    if nt2.ttype == TT::COMMA
+                    {
+                        if let Some(nt3) = self.nextx(3)
+                        {
+                            if nt3.ttype == TT::REGX
+                            {
+                                return Mode::ZPX;
+                            }
+                            if nt3.ttype == TT::REGY
+                            {
+                                return Mode::ZPY;
+                            }
+                            return Mode::UNKNOWN;
+                        }
+                    }
+                    else
+                    {
+                        return Mode::ZP;
+                    }
+                }
+                else
+                {
+                    return Mode::ZP;
+                }
+            }
+            if nt.tstring.len() >= 4
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    if nt2.ttype == TT::COMMA
+                    {
+                        if let Some(nt3) = self.nextx(3)
+                        {
+                            if nt3.ttype == TT::REGX
+                            {
+                                return Mode::ABSX;
+                            }
+                            if nt3.ttype == TT::REGY
+                            {
+                                return Mode::ABSY;
+                            }
+                        }
+
+                        return Mode::UNKNOWN;
+                    }
+
+                    return Mode::ABS;
+                }
+                else
+                {
+                    return Mode::ABS;
+                }
+            }
+            return Mode::IMP;
+        }
+
+        return Mode::IMP;
+    }
+
     pub fn parse(&mut self) -> Vec<u8>
     {
         // TODO : Add lowecase versions of the commands
-        let mut instruction_strings = vec!["ADC", "AND", "ASL", "BCC", "BCS", "BEQ", "BIT", "BMI", "BNE", "BPL", "BRK", "BVC", "CLC", "CLD", "CLI", "CLV", "CMP", "CPX", "CPY", "DEC", "DEX", "DEY", "EOR", "INC", "INX", "INY", "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "NOP", "ORA", "PHA", "PHP", "PLA", "PLP", "ROL", "ROR", "RTI", "RTS", "SBC", "SEC", "SED", "SEI", "STA", "STX", "STY", "TAX", "TAY", "TSX", "TXA", "TXS", "TYA",];
+        let mut instruction_strings = vec!["ADC", "AND", "ASL", "BCC", "BCS", "BEQ", "BIT", "BMI", "BNE", "BPL", "BRK", "BVC","BVS", "CLC", "CLD", "CLI", "CLV", "CMP", "CPX", "CPY", "DEC", "DEX", "DEY", "EOR", "INC", "INX", "INY", "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "NOP", "ORA", "PHA", "PHP", "PLA", "PLP", "ROL", "ROR", "RTI", "RTS", "SBC", "SEC", "SED", "SEI", "STA", "STX", "STY", "TAX", "TAY", "TSX", "TXA", "TXS", "TYA",];
         instruction_strings.sort_unstable();
 
         // First pass : Update unknown tokens and read labels
-        let mut labels = HashMap::new();
-        let mut optional = self.current();
         loop 
         {
             let t = self.current();
@@ -111,7 +386,7 @@ impl Lexer
                         if nt.ttype == TT::COLON
                         {
                             self.tokens[self.current_token].ttype = TT::LABEL;
-                            labels.insert(self.tokens[self.current_token].tstring.clone(), 1);
+                            self.labels.insert(self.tokens[self.current_token].tstring.clone(), 0);
                         }
                         else
                         {
@@ -126,7 +401,7 @@ impl Lexer
 
                             if valid
                             {
-                                self.tokens[self.current_token].ttype = TT::NUMBER;
+                                self.tokens[self.current_token].ttype = TT::UNKNOWN;
                             }
                         }
                     }
@@ -157,24 +432,100 @@ impl Lexer
             }
         }
 
+
+        self.current_token = 0;
+        let mut mem_index = 0;
+        loop 
+        {
+            if let Some(t) = self.current()
+            {
+                // Set value of label
+                if t.ttype == TT::LABEL
+                {
+                    // self.labels.insert(self.tokens[self.current_token].tstring.clone(), mem_index);
+                    self.labels.insert(self.tokens[self.current_token].tstring.clone(), mem_index);
+                    self.step();
+                    continue;
+                }
+
+                if t.ttype == TT::INSTRUCTION
+                {
+                    mem_index += 1;
+                    let mode = self.next_mode();
+                    match mode 
+                    {
+
+                        Mode::ABS => mem_index+=2,
+                        Mode::ABSX => mem_index+=2,
+                        Mode::ABSY => mem_index+=2,
+                        Mode::IMM => mem_index+=1,
+                        Mode::IMP => {},
+                        Mode::IND => mem_index += 2,
+                        Mode::INDX => mem_index += 1,
+                        Mode::INDY => mem_index += 1,
+                        Mode::REL => mem_index += 1,
+                        Mode::ZP => mem_index += 1,
+                        Mode::ZPX => mem_index += 1,
+                        Mode::ZPY => mem_index += 1,
+                        _ => panic!("Unknown addressing mode"),
+                    }
+                    self.step();
+                    continue;
+                }
+
+                self.step();
+
+            }
+            else 
+            {
+                break;
+            }
+        }
+
         self.current_token = 0;
 
-        println!("Labels found : {}", labels.len());
+        // Replace labels with correct index
+        loop
+        {
+            if let Some(t) = self.current()
+            {
+                // Replace labels with values
+                if t.ttype != TT::INSTRUCTION || t.ttype != TT::LABEL
+                {
+                    match self.labels.get(&t.tstring)
+                    {
+                        Some(&value) => { 
+                            self.tokens[self.current_token].ttype = TT::LABEL_OPERAND;
+                            // println!("Label replace: {} set to value :{} line_no {}", self.tokens[self.current_token].tstring, value, self.tokens[self.current_token].line_no);
+                            self.tokens[self.current_token].tstring = format!("{:x}",value);
+                        },
+                        None => {},
+                    }
+                    self.step();
+                    continue;
+                }
+                self.step();
+                continue;
+            }
+            else 
+            {
+                break;
+            }
+        }
+        self.current_token = 0;
 
-        let mut errors: Vec<String> = vec![];
         let mut hex_code: Vec<u8> = vec![];
         // Second pass : Create the instructions vector
         loop 
         {
-            let mut op_code: u8 = 0;
             let t = self.current();
 
-            let mode = 0;
             if let Some(t) = t
             {
                 if t.ttype == TT::INSTRUCTION
                 {
-                    println!("Instruction {}", t.tstring);
+                    let mode = self.next_mode();
+                    // println!("Instruction: {} Mode: {} ", t.tstring, mode);
                     if t.tstring == "ADC"
                     {
                         match mode
@@ -189,7 +540,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::ADC_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "AND"
                     {
@@ -205,7 +555,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::AND_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "ASL"
                     {
@@ -218,7 +567,6 @@ impl Lexer
                             Mode::ABSX => hex_code.push(Instruction::ASL_ABSX),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BCC"
                     {
@@ -227,7 +575,6 @@ impl Lexer
                             Mode::REL => hex_code.push(Instruction::BCC_REL),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BCS"
                     {
@@ -236,7 +583,6 @@ impl Lexer
                             Mode::REL => hex_code.push(Instruction::BCS_REL),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BEQ"
                     {
@@ -245,7 +591,6 @@ impl Lexer
                             Mode::REL => hex_code.push(Instruction::BEQ_REL),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BIT"
                     {
@@ -255,7 +600,6 @@ impl Lexer
                             Mode::ABS => hex_code.push(Instruction::BIT_ABS),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BMI"
                     {
@@ -264,7 +608,6 @@ impl Lexer
                             Mode::REL => hex_code.push(Instruction::BMI_REL),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BNE"
                     {
@@ -273,7 +616,6 @@ impl Lexer
                             Mode::REL => hex_code.push(Instruction::BNE_REL),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BPL"
                     {
@@ -282,7 +624,6 @@ impl Lexer
                             Mode::REL => hex_code.push(Instruction::BPL_REL),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BRK"
                     {
@@ -291,7 +632,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::BRK_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "BVC"
                     {
@@ -300,7 +640,14 @@ impl Lexer
                             Mode::REL => hex_code.push(Instruction::BVC_REL),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
+                    }
+                    if t.tstring == "BVS"
+                    {
+                        match mode
+                        {
+                            Mode::REL => hex_code.push(Instruction::BVS_REL),
+                            _ => panic!("Unknown addressing mode"),
+                        }
                     }
                     if t.tstring == "CLC"
                     {
@@ -309,7 +656,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::CLC_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "CLD"
                     {
@@ -318,7 +664,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::CLD_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "CLI"
                     {
@@ -327,7 +672,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::CLI_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "CLV"
                     {
@@ -336,7 +680,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::CLV_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "CMP"
                     {
@@ -352,7 +695,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::CMP_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "CPX"
                     {
@@ -363,18 +705,6 @@ impl Lexer
                             Mode::ABS => hex_code.push(Instruction::CPX_ABS),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
-                    }
-                    if t.tstring == "CPY"
-                    {
-                        match mode
-                        {
-                            Mode::IMM => hex_code.push(Instruction::CPY_IMM),
-                            Mode::ZP => hex_code.push(Instruction::CPY_ZP),
-                            Mode::ABS => hex_code.push(Instruction::CPY_ABS),
-                            _ => panic!("Unknown addressing mode"),
-                        }
-                        continue;
                     }
                     if t.tstring == "DEC"
                     {
@@ -386,7 +716,6 @@ impl Lexer
                             Mode::ABSX => hex_code.push(Instruction::DEC_ABSX),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "DEX"
                     {
@@ -395,7 +724,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::DEX_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "DEY"
                     {
@@ -404,7 +732,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::DEY_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "EOR"
                     {
@@ -420,7 +747,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::EOR_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "INC"
                     {
@@ -432,7 +758,6 @@ impl Lexer
                             Mode::ABSX => hex_code.push(Instruction::INC_ABSX),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "INX"
                     {
@@ -441,7 +766,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::INX_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "INY"
                     {
@@ -450,7 +774,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::INY_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "JMP"
                     {
@@ -460,7 +783,6 @@ impl Lexer
                             Mode::IND => hex_code.push(Instruction::JMP_IND),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "JSR"
                     {
@@ -469,7 +791,6 @@ impl Lexer
                             Mode::ABS => hex_code.push(Instruction::JSR_ABS),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "LDA"
                     {
@@ -485,7 +806,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::LDA_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "LDX"
                     {
@@ -498,7 +818,6 @@ impl Lexer
                             Mode::ABSY => hex_code.push(Instruction::LDX_ABSY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "LDY"
                     {
@@ -511,7 +830,6 @@ impl Lexer
                             Mode::ABSX => hex_code.push(Instruction::LDY_ABSX),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "LSR"
                     {
@@ -524,7 +842,6 @@ impl Lexer
                             Mode::ABSX => hex_code.push(Instruction::LSR_ABSX),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "NOP"
                     {
@@ -533,7 +850,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::NOP_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "ORA"
                     {
@@ -549,7 +865,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::ORA_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "PHA"
                     {
@@ -558,7 +873,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::PHA_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "PHP"
                     {
@@ -567,7 +881,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::PHP_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "PLA"
                     {
@@ -576,7 +889,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::PLA_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "PLP"
                     {
@@ -585,7 +897,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::PLP_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "ROL"
                     {
@@ -598,7 +909,6 @@ impl Lexer
                             Mode::ABSX => hex_code.push(Instruction::ROL_ABSX),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "ROR"
                     {
@@ -611,7 +921,6 @@ impl Lexer
                             Mode::ABSX => hex_code.push(Instruction::ROR_ABSX),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "RTI"
                     {
@@ -620,7 +929,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::RTI_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "RTS"
                     {
@@ -629,7 +937,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::RTS_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "SBC"
                     {
@@ -645,7 +952,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::SBC_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "SEC"
                     {
@@ -654,7 +960,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::SEC_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "SED"
                     {
@@ -663,7 +968,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::SED_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "SEI"
                     {
@@ -672,7 +976,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::SEI_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "STA"
                     {
@@ -687,7 +990,6 @@ impl Lexer
                             Mode::INDY => hex_code.push(Instruction::STA_INDY),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "STX"
                     {
@@ -698,7 +1000,6 @@ impl Lexer
                             Mode::ABS => hex_code.push(Instruction::STX_ABS),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "STY"
                     {
@@ -709,7 +1010,6 @@ impl Lexer
                             Mode::ABS => hex_code.push(Instruction::STY_ABS),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "TAX"
                     {
@@ -718,7 +1018,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::TAX_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "TAY"
                     {
@@ -727,7 +1026,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::TAY_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "TSX"
                     {
@@ -736,7 +1034,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::TSX_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "TXA"
                     {
@@ -745,7 +1042,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::TXA_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "TXS"
                     {
@@ -754,7 +1050,6 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::TXS_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
                     }
                     if t.tstring == "TYA"
                     {
@@ -763,25 +1058,30 @@ impl Lexer
                             Mode::IMP => hex_code.push(Instruction::TYA_IMP),
                             _ => panic!("Unknown addressing mode"),
                         }
-                        continue;
+                    }
+
+                    if mode != Mode::IMP
+                    {
+                        match mode 
+                        {
+
+                            Mode::ABS | Mode::ABSX | Mode::ABSY | Mode::IND => 
+                            {
+                                let operand = self.get_operand_u16();
+                                let hsb:u8 = (operand << 8) as u8;
+                                let lsb:u8 = operand as u8;
+                                hex_code.push(hsb);
+                                hex_code.push(lsb);
+                            },
+                            Mode::IMM | Mode::INDX | Mode::INDY | Mode::REL | Mode::ZP | Mode::ZPX | Mode::ZPY =>
+                            {
+                                let operand = self.get_operand_u8();
+                                hex_code.push(operand);
+                            },
+                            _ => panic!("Unknown addressing mode"),
+                        }
                     }
                 }
-
-                self.step();
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        // Third pass
-        loop 
-        {
-            let t = self.current();
-
-            if let Some(t) = t
-            {
 
                 self.step();
             }
@@ -1015,9 +1315,9 @@ impl Lexer
                     }
                 }
 
-                let t = Token { ttype: TT::NL, tstring:"NL".to_string(), line_no:1};
-                self.tokens.push(t);
-                self.step();
+                // let t = Token { ttype: TT::NL, tstring:"NL".to_string(), line_no:1};
+                // self.tokens.push(t);
+                // self.step();
                 line_no += 1;
 
                 continue;
@@ -1027,6 +1327,18 @@ impl Lexer
             unknown_chars_size += 1;
         }
 
+        if unknown_chars_size > 0
+        {
+            let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+            self.tokens.push(t);
+            self.step();
+            unknown_chars.clear();
+        }
+
+
+        let t = Token { ttype: TT::EOF, tstring:"".to_string(), line_no:line_no};
+        self.tokens.push(t);
+        self.step();
         self.current_token = 0;
 
     }
