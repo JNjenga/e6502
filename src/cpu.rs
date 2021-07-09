@@ -508,15 +508,30 @@ impl Cpu
             },
             isa::Instruction::BCC_REL =>
             {
-                let operand = self.get_rel();
+                let carry_flag = (self.sr << 7) >> 7;
+                if carry_flag == 0
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
             },
             isa::Instruction::BCS_REL =>
             {
-                let operand = self.get_rel();
+                let carry_flag = (self.sr << 7) >> 7;
+                if carry_flag == 1
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
             },
             isa::Instruction::BEQ_REL =>
             {
-                let operand = self.get_rel();
+                let zero_flag = (self.sr << 6) >> 7;
+                if zero_flag == 1
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
             },
             isa::Instruction::BIT_ABS =>
             {
