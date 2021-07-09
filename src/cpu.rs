@@ -318,8 +318,23 @@ impl Cpu
 
                 match option
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
                 }
             },
             isa::Instruction::ADC_INDX =>
@@ -329,8 +344,23 @@ impl Cpu
 
                 match option
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
                 }
             },
             isa::Instruction::ADC_INDY =>
@@ -340,8 +370,23 @@ impl Cpu
 
                 match option
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
                 }
             },
             isa::Instruction::ADC_ZP =>
@@ -351,8 +396,23 @@ impl Cpu
 
                 match option
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
                 }
             },
             isa::Instruction::ADC_ZPX =>
@@ -362,8 +422,23 @@ impl Cpu
 
                 match option
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
                 }
             },
             isa::Instruction::AND_ABS =>
