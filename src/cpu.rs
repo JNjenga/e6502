@@ -481,48 +481,30 @@ impl Cpu
                 let operand = self.get_zpx();
                 self.a &= operand;
             },
+            isa::Instruction::ASL_ACC =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+                self.a <<= 1;
+            },
+            isa::Instruction::ASL_ABS =>
+            {
+                let operand = self.get_abs_ref();
+                *operand <<= 1;
             },
             isa::Instruction::ASL_ABSX =>
             {
-                let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+                let operand = self.get_absx_ref();
+                *operand <<= 1;
             },
             isa::Instruction::ASL_ZP =>
             {
-                let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+                let operand = self.get_zp_ref();
+                *operand <<= 1;
             },
             isa::Instruction::ASL_ZPX =>
             {
-                let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+                let operand = self.get_zpx_ref();
+                *operand <<= 1;
             },
             isa::Instruction::BCC_REL =>
             {
