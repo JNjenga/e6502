@@ -68,6 +68,18 @@ impl Cpu
         self.mem[usize::from(res)]
     }
 
+    fn get_abs_ref(&mut self) -> &mut u8
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+        self.pc += 2;
+        &mut self.mem[usize::from(res)]
+    }
+
     fn get_absx(&mut self) -> u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -81,6 +93,19 @@ impl Cpu
         self.mem[usize::from(res)]
     }
 
+    fn get_absx_ref(&mut self) -> &mut u8
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+        res = res + u16::from(self.x);
+        self.pc += 2;
+        &mut self.mem[usize::from(res)]
+    }
+
     fn get_absy(&mut self) -> u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -92,6 +117,19 @@ impl Cpu
         res = res + u16::from(self.x);
         self.pc += 2;
         self.mem[usize::from(res)]
+    }
+
+    fn get_absy_ref(&mut self) -> &mut u8
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+        res = res + u16::from(self.x);
+        self.pc += 2;
+        &mut self.mem[usize::from(res)]
     }
 
     fn get_imm(&mut self) -> u8
@@ -154,21 +192,35 @@ impl Cpu
     {
         let value = self.mem[usize::from(self.pc)];
         self.pc += 1;
-        value 
+        self.mem[usize::from(value)]
+    }
+
+    fn get_zp_ref(&mut self) -> &mut u8
+    {
+        let value = self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        &mut self.mem[usize::from(value)]
     }
 
     fn get_zpx(&mut self) -> u8
     {
         let value = self.x + self.mem[usize::from(self.pc)];
         self.pc += 1;
-        value
+        self.mem[usize::from(value)]
+    }
+
+    fn get_zpx_ref(&mut self) -> &mut u8
+    {
+        let value = self.x + self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        &mut self.mem[usize::from(value)]
     }
 
     fn get_zpy(&mut self) -> u8
     {
         let value = self.y + self.mem[usize::from(self.pc)];
         self.pc += 1;
-        value
+        self.mem[usize::from(value)]
     }
 
     fn execute_instruction(&mut self, opcode: u8)
@@ -178,12 +230,28 @@ impl Cpu
             isa::Instruction::ADC_IMM =>
             {
                 let operand = self.get_imm();
+
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
                 }
             },
             isa::Instruction::ADC_ABS =>
@@ -193,8 +261,23 @@ impl Cpu
 
                 match option
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
                 }
             },
             isa::Instruction::ADC_ABSX =>
@@ -202,6 +285,26 @@ impl Cpu
                 let operand = self.get_absx();
                 let option = self.a.checked_add(operand);
 
+                match option
+                {
+                    None => 
+                    {
+                        self.sr |= Cpu::OverFlowFlag;
+                        self.sr |= Cpu::CarryFlag;
+                    },
+                    Some(value) =>
+                    {
+                        if value == 0
+                        {
+                            self.sr |= Cpu::ZeroFlag;
+                        }
+
+                        if value >> 7 == 0
+                        {
+                            self.sr |= Cpu::NegFlag;
+                        }
+                    }
+                }
                 match option
                 {
                     None => { self.sr |= Cpu::OverFlowFlag; },
