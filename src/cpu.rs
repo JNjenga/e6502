@@ -41,7 +41,7 @@ impl Cpu
     const BreakFlag:u8              = 0b00100000;
     // const UnusedFlag:u8             = 0b00010000;
     const DecimalFlag:u8            = 0b00001000;
-    const IntreruptDisableFlag:u8   = 0b00000100;
+    const InterruptFlag:u8          = 0b00000100;
     const ZeroFlag:u8               = 0b00000010;
     const CarryFlag:u8              = 0b00000001;
 
@@ -508,7 +508,7 @@ impl Cpu
             },
             isa::Instruction::BCC_REL =>
             {
-                let carry_flag = (self.sr << 7) >> 7;
+                let carry_flag = self.sr & Cpu::CarryFlag;
                 if carry_flag == 0
                 {
                     let operand = self.get_rel();
@@ -517,8 +517,8 @@ impl Cpu
             },
             isa::Instruction::BCS_REL =>
             {
-                let carry_flag = (self.sr << 7) >> 7;
-                if carry_flag == 1
+                let carry_flag = self.sr & Cpu::CarryFlag;
+                if carry_flag == Cpu::CarryFlag
                 {
                     let operand = self.get_rel();
                     self.pc = operand;
@@ -526,8 +526,8 @@ impl Cpu
             },
             isa::Instruction::BEQ_REL =>
             {
-                let zero_flag = (self.sr << 6) >> 7;
-                if zero_flag == 1
+                let zero_flag = self.sr & Cpu::ZeroFlag;
+                if zero_flag == Cpu::ZeroFlag
                 {
                     let operand = self.get_rel();
                     self.pc = operand;
@@ -536,65 +536,169 @@ impl Cpu
             isa::Instruction::BIT_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
+                let neg_flag = (operand << 1) >> 7;
+                let overflow_flag = (operand << 2) >> 7;
+                let zero_flag = self.a & operand;
 
-                match option
+                if neg_flag == 0
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr &= !Cpu::NegFlag;
+                }
+                else 
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if overflow_flag == 0
+                {
+                    self.sr &= !Cpu::OverFlowFlag;
+                }
+                else 
+                {
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if zero_flag == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::BIT_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
+                let neg_flag = (operand << 1) >> 7;
+                let overflow_flag = (operand << 2) >> 7;
+                let zero_flag = self.a & operand;
 
-                match option
+                if neg_flag == 0
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr &= !Cpu::NegFlag;
+                }
+                else 
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if overflow_flag == 0
+                {
+                    self.sr &= !Cpu::OverFlowFlag;
+                }
+                else 
+                {
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if zero_flag == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::BMI_REL =>
             {
-                let operand = self.get_rel();
+                let neg_flag = self.sr & Cpu::NegFlag;
+                if neg_flag == Cpu::NegFlag 
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
             },
             isa::Instruction::BNE_REL =>
             {
-                let operand = self.get_rel();
+                let zero_flag = self.sr & Cpu::ZeroFlag;
+                if zero_flag == 0
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
             },
             isa::Instruction::BPL_REL =>
             {
-                let operand = self.get_rel();
+                let neg_flag = self.sr & Cpu::NegFlag;
+                if neg_flag == 0
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
+            },
+            isa::Instruction::BRK_IMP =>
+            {
+                self.sr |= Cpu::BreakFlag;
+                self.pc += 2;
+
             },
             isa::Instruction::BVC_REL =>
             {
-                let operand = self.get_rel();
+                let overflow_flag = self.sr & Cpu::OverFlowFlag;
+                if overflow_flag == 0
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
             },
             isa::Instruction::BVS_REL =>
             {
-                let operand = self.get_rel();
+                let overflow_flag = self.sr & Cpu::OverFlowFlag;
+                if overflow_flag == Cpu::OverFlowFlag 
+                {
+                    let operand = self.get_rel();
+                    self.pc = operand;
+                }
             },
+            isa::Instruction::CLC_IMP =>
+            {
+                self.sr &= !Cpu::CarryFlag;
+            },
+            isa::Instruction::CLD_IMP =>
+            {
+                self.sr &= !Cpu::DecimalFlag;
+            },
+            isa::Instruction::CLI_IMP =>
+            {
+                self.sr &= !Cpu::InterruptFlag;
+            },
+            isa::Instruction::CLV_IMP =>
+            {
+                self.sr &= !Cpu::OverFlowFlag;
+            },
+
             isa::Instruction::CMP_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CMP_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CMP_ABSY =>
@@ -602,10 +706,20 @@ impl Cpu
                 let operand = self.get_absy();
                 let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CMP_IMM =>
@@ -613,10 +727,20 @@ impl Cpu
                 let operand = self.get_imm();
                 let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CMP_INDX =>
@@ -624,153 +748,270 @@ impl Cpu
                 let operand = self.get_indx();
                 let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CMP_INDY =>
             {
                 let operand = self.get_indy();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CMP_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CMP_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.a > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.a == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CPX_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.x > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.x < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.x == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CPX_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.x > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.x < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.x == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CPX_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.x > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.x < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.x == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CPY_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.y > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.y < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.y == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CPY_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.y > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.y < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.y == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::CPY_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
+                if self.y > operand
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.y < operand
+                {
+                    self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                }
+                else if self.y == operand
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
             },
             isa::Instruction::DEC_ABS =>
             {
-                let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
+                let operand = self.get_abs_ref();
 
-                match option
+                *operand = operand.wrapping_sub(1);
+                let result = *operand;
+
+                if result >> 7 == 1
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::DEC_ABSX =>
             {
-                let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
+                let operand = self.get_absx_ref();
 
-                match option
+                *operand = operand.wrapping_sub(1);
+                let result = *operand;
+
+                if result >> 7 == 1
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::DEC_ZP =>
             {
-                let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
+                let operand = self.get_zp_ref();
 
-                match option
+                *operand = operand.wrapping_sub(1);
+
+                let result = *operand;
+
+                if result >> 7 == 1
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::DEC_ZPX =>
             {
-                let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
+                let operand = self.get_zpx_ref();
 
-                match option
+                *operand = operand.wrapping_sub(1);
+
+                let result = *operand;
+
+                if result >> 7 == 1
                 {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::EOR_ABS =>
