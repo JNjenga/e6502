@@ -1014,148 +1014,104 @@ impl Cpu
                     self.sr |= Cpu::ZeroFlag;
                 }
             },
+            isa::Instruction::DEX_IMP =>
+            {
+                self.x = self.x.wrapping_sub(1);
+
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+            },
+            isa::Instruction::DEY_IMP =>
+            {
+                self.y = self.x.wrapping_sub(1);
+
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::OverFlowFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+            },
             isa::Instruction::EOR_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::EOR_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::EOR_ABSY =>
             {
                 let operand = self.get_absy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::EOR_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::EOR_INDX =>
             {
                 let operand = self.get_indx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::EOR_INDY =>
             {
                 let operand = self.get_indy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::EOR_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::EOR_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::INC_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::INC_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::INC_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::INC_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::INX_IMP =>
+            {
+            },
+            isa::Instruction::INY_IMP =>
+            {
             },
             isa::Instruction::JMP_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::JMP_IND =>
             {
@@ -1165,662 +1121,359 @@ impl Cpu
             isa::Instruction::JSR_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_ABSY =>
             {
                 let operand = self.get_absy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_INDX =>
             {
                 let operand = self.get_indx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_INDY =>
             {
                 let operand = self.get_indy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDA_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDX_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDX_ABSY =>
             {
                 let operand = self.get_absy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDX_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDX_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDX_ZPY =>
             {
                 let operand = self.get_zpy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDY_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDY_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDY_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDY_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LDY_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::LSR_ACC =>
+            {
             },
             isa::Instruction::LSR_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LSR_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LSR_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::LSR_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::NOP_IMP =>
+            {
             },
             isa::Instruction::ORA_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ORA_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ORA_ABSY =>
             {
                 let operand = self.get_absy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ORA_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ORA_INDX =>
             {
                 let operand = self.get_indx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ORA_INDY =>
             {
                 let operand = self.get_indy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ORA_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ORA_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::PHA_IMP =>
+            {
+            },
+            isa::Instruction::PHP_IMP =>
+            {
+            },
+            isa::Instruction::PLA_IMP =>
+            {
+            },
+            isa::Instruction::PLP_IMP =>
+            {
+            },
+            isa::Instruction::ROL_ACC =>
+            {
             },
             isa::Instruction::ROL_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ROL_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ROL_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ROL_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::ROR_ACC =>
+            {
             },
             isa::Instruction::ROR_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ROR_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ROR_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::ROR_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::RTI_IMP =>
+            {
+            },
+            isa::Instruction::RTS_IMP =>
+            {
             },
             isa::Instruction::SBC_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::SBC_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::SBC_ABSY =>
             {
                 let operand = self.get_absy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::SBC_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::SBC_INDX =>
             {
                 let operand = self.get_indx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::SBC_INDY =>
             {
                 let operand = self.get_indy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::SBC_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::SBC_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::SEC_IMP =>
+            {
+            },
+            isa::Instruction::SED_IMP =>
+            {
+            },
+            isa::Instruction::SEI_IMP =>
+            {
             },
             isa::Instruction::STA_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STA_ABSX =>
             {
                 let operand = self.get_absx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STA_ABSY =>
             {
                 let operand = self.get_absy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STA_INDX =>
             {
                 let operand = self.get_indx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STA_INDY =>
             {
                 let operand = self.get_indy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STA_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STA_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STX_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STX_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STX_ZPY =>
             {
                 let operand = self.get_zpy();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STY_ABS =>
             {
                 let operand = self.get_abs();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STY_ZP =>
             {
                 let operand = self.get_zp();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
             },
             isa::Instruction::STY_ZPX =>
             {
                 let operand = self.get_zpx();
-                let option = self.a.checked_add(operand);
 
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
-                }
+            },
+            isa::Instruction::TAX_IMP =>
+            {
+            },
+            isa::Instruction::TAY_IMP =>
+            {
+            },
+            isa::Instruction::TSX_IMP =>
+            {
+            },
+            isa::Instruction::TXA_IMP =>
+            {
+            },
+            isa::Instruction::TXS_IMP =>
+            {
+            },
+            isa::Instruction::TYA_IMP =>
+            {
             },
             _ => panic!("Opcode not supported")
 
