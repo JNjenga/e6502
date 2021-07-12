@@ -1,6 +1,8 @@
 // TODO : Is this the correct way of including the file?
 use crate::isa::*;
 use std::collections::HashMap;
+use std::num::ParseIntError;
+
 
 #[allow(dead_code)]
 #[derive(PartialEq,Eq)]
@@ -95,6 +97,7 @@ impl Lexer
         self.current_token += steps;
     }
 
+    // TODO : (James) This function should return a reulst for better error handling
     pub fn get_operand_u8(&self) -> u8
     {
         if let Some(nt) = self.next()
@@ -116,13 +119,18 @@ impl Lexer
                 panic!("INVALID bin value after {} at {}", nt.tstring, nt.line_no);
             }
 
+            if nt.ttype == TT::LABEL_OPERAND
+            {
+                return u8::from_str_radix(&nt.tstring, 16).unwrap();
+            }
+
             return u8::from_str_radix(&nt.tstring, 10).unwrap();
         }
+        return u8::from_str_radix("raise err", 10).unwrap();
 
-        panic!("Unknown error");
     }
 
-
+    // TODO : (James) This function should return a reulst for better error handling
     pub fn get_operand_u16(&self) -> u16
     {
         if let Some(nt) = self.next()
@@ -133,7 +141,6 @@ impl Lexer
                 {
                     return u16::from_str_radix(&nt2.tstring, 16).unwrap();
                 }
-                panic!("INVALID hex value after {} at {}", nt.tstring, nt.line_no);
             }
             if nt.ttype == TT::PERCENT
             {
@@ -141,13 +148,18 @@ impl Lexer
                 {
                     return u16::from_str_radix(&nt2.tstring, 2).unwrap();
                 }
-                panic!("INVALID bin value after {} at {}", nt.tstring, nt.line_no);
             }
 
+            if nt.ttype == TT::LABEL_OPERAND
+            {
+                return u16::from_str_radix(&nt.tstring, 16).unwrap();
+            }
+
+            // println!("Type: {:?}, String : {:?}, Line No : {}", nt.ttype, nt.tstring, nt.line_no);
             return u16::from_str_radix(&nt.tstring, 10).unwrap();
         }
+        return u16::from_str_radix("raise err", 10).unwrap();
 
-        0
     }
 
     pub fn next_mode(&self) -> u32
@@ -171,10 +183,12 @@ impl Lexer
             {
                 return Mode::ACC;
             }
+
             if nt.ttype == TT::BRACKETOPEN
             {
                 if let Some(nt2) = self.nextx(2)
                 {
+                    // println!("Type: {:?}, String : {:?}, Line No : {}", nt2.ttype, nt2.tstring, nt2.line_no);
                     if nt2.ttype == TT::UNKNOWN || nt2.ttype == TT::NUMBER
                     {
                         if let Some(nt3) = self.nextx(3)
@@ -195,10 +209,38 @@ impl Lexer
                                     {
                                         return Mode::INDX;
                                     }
+
                                     return Mode::UNKNOWN;
                                 }
                             }
                         }
+                    }
+                    else if nt2.ttype == TT::DOLLAR || nt2.ttype == TT::PERCENT
+                    {
+                        if let Some(nt4) = self.nextx(4)
+                        {
+                            if nt4.ttype == TT::BRACKETCLOSE
+                            {
+                                return Mode::INDY;
+                            }
+                            else
+                            {
+                                if let Some(nt5) = self.nextx(5)
+                                {
+                                    if nt5.ttype == TT::BRACKETCLOSE
+                                    {
+                                        return Mode::IND;
+                                    }
+                                    else if nt5.ttype == TT::REGX
+                                    {
+                                        return Mode::INDX;
+                                    }
+
+                                    return Mode::UNKNOWN;
+                                }
+                            }
+                        }
+
                     }
                     return Mode::UNKNOWN;
                 }
@@ -297,7 +339,7 @@ impl Lexer
                 }
             }
 
-            if nt.tstring.len() <= 3 && nt.ttype == TT::UNKNOWN || nt.ttype == TT::NUMBER
+            if nt.tstring.len() <= 3 && (nt.ttype == TT::UNKNOWN || nt.ttype == TT::NUMBER)
             {
                 if let Some(nt2) = self.nextx(2)
                 {
@@ -354,6 +396,52 @@ impl Lexer
                     return Mode::ABS;
                 }
             }
+            if nt.ttype == TT::NUMBER
+            {
+                let op = u16::from_str_radix(&nt.tstring, 10).unwrap();
+                if op < 256
+                {
+                    return Mode::ZP;
+                }
+
+                return Mode::ABS;
+
+            }
+
+            if nt.ttype == TT::DOLLAR
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    let op = u16::from_str_radix(&nt2.tstring, 16).unwrap();
+                    if op < 256
+                    {
+                        return Mode::ZP;
+                    }
+
+                    return Mode::ABS;
+                }
+                return Mode::UNKNOWN;
+
+            }
+
+            if nt.ttype == TT::PERCENT
+            {
+                if let Some(nt2) = self.nextx(2)
+                {
+                    let op = u16::from_str_radix(&nt2.tstring, 2);
+
+                    if op.unwrap() < 256
+                    {
+                        return Mode::ZP;
+                    }
+
+                    return Mode::ABS;
+
+                }
+
+                return Mode::UNKNOWN;
+
+            }
             return Mode::IMP;
         }
 
@@ -362,8 +450,7 @@ impl Lexer
 
     pub fn parse(&mut self) -> Vec<u8>
     {
-        // TODO : Add lowecase versions of the commands
-        let mut instruction_strings = vec!["ADC", "AND", "ASL", "BCC", "BCS", "BEQ", "BIT", "BMI", "BNE", "BPL", "BRK", "BVC","BVS", "CLC", "CLD", "CLI", "CLV", "CMP", "CPX", "CPY", "DEC", "DEX", "DEY", "EOR", "INC", "INX", "INY", "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "NOP", "ORA", "PHA", "PHP", "PLA", "PLP", "ROL", "ROR", "RTI", "RTS", "SBC", "SEC", "SED", "SEI", "STA", "STX", "STY", "TAX", "TAY", "TSX", "TXA", "TXS", "TYA",];
+        let mut instruction_strings = vec!["ADC", "AND", "ASL", "BCC", "BCS", "BEQ", "BIT", "BMI", "BNE", "BPL", "BRK", "BVC","BVS", "CLC", "CLD", "CLI", "CLV", "CMP", "CPX", "CPY", "DEC", "DEX", "DEY", "EOR", "INC", "INX", "INY", "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "NOP", "ORA", "PHA", "PHP", "PLA", "PLP", "ROL", "ROR", "RTI", "RTS", "SBC", "SEC", "SED", "SEI", "STA", "STX", "STY", "TAX", "TAY", "TSX", "TXA", "TXS", "TYA","adc","and","asl","bcc","bcs","beq","bit","bmi","bne","bpl","brk","bvc","bvs","clc","cld","cli","clv","cmp","cpx","cpy","dec","dex","dey","eor","inc","inx","iny","jmp","jsr","lda","ldx","ldy","lsr","nop","ora","pha","php","pla","plp","rol","ror","rti","rts","sbc","sec","sed","sei","sta","stx","sty","tax","tay","tsx","txa","txs","tya"];
         instruction_strings.sort_unstable();
 
         // First pass : Update unknown tokens and read labels
@@ -379,6 +466,8 @@ impl Lexer
                     if instruction_strings.contains(&&t.tstring[..])
                     { 
                         self.tokens[self.current_token].ttype = TT::INSTRUCTION;
+                        self.tokens[self.current_token].tstring =
+                            self.tokens[self.current_token].tstring.to_uppercase();
                     }
                     // If label
                     else if let Some(nt) = self.next()
@@ -393,15 +482,32 @@ impl Lexer
                             let mut valid = true;
                             for tc in t.tstring.chars()
                             {
-                                if tc < '0' ||  (tc > '9' && tc < 'A') || tc > 'F'
+                                if tc < '0'
                                 {
                                     valid = false;
+                                    break;
+                                }
+                                else if tc > 'f'
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                                else if tc < 'a' && tc > 'A'
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                                else if tc < 'F' && tc > 'A'
+                                {
+                                    valid = false;
+                                    break;
                                 }
                             }
 
                             if valid
                             {
-                                self.tokens[self.current_token].ttype = TT::UNKNOWN;
+                                // println!("Type: {:?}, String : {:?}, Line No : {}", nt.ttype, nt.tstring, nt.line_no);
+                                self.tokens[self.current_token].ttype = TT::NUMBER;
                             }
                         }
                     }
@@ -411,9 +517,25 @@ impl Lexer
                         let mut valid = true;
                         for tc in t.tstring.chars()
                         {
-                            if tc < '0' ||  (tc > '9' && tc < 'A') || tc > 'F'
+                            if tc < '0'
                             {
                                 valid = false;
+                                break;
+                            }
+                            else if tc > 'f'
+                            {
+                                valid = false;
+                                break;
+                            }
+                            else if tc < 'a' && tc > 'A'
+                            {
+                                valid = false;
+                                break;
+                            }
+                            else if tc < 'F' && tc > 'A'
+                            {
+                                valid = false;
+                                break;
                             }
                         }
 
@@ -467,7 +589,10 @@ impl Lexer
                         Mode::ZP => mem_index += 1,
                         Mode::ZPX => mem_index += 1,
                         Mode::ZPY => mem_index += 1,
-                        _ => panic!("Unknown addressing mode"),
+                        _ =>
+                        {
+                            panic!("Unknown addressing mode")
+                        },
                     }
                     self.step();
                     continue;
@@ -490,7 +615,7 @@ impl Lexer
             if let Some(t) = self.current()
             {
                 // Replace labels with values
-                if t.ttype != TT::INSTRUCTION || t.ttype != TT::LABEL
+                if t.ttype == TT::UNKNOWN
                 {
                     match self.labels.get(&t.tstring)
                     {
@@ -499,7 +624,11 @@ impl Lexer
                             // println!("Label replace: {} set to value :{} line_no {}", self.tokens[self.current_token].tstring, value, self.tokens[self.current_token].line_no);
                             self.tokens[self.current_token].tstring = format!("{:x}",value);
                         },
-                        None => {},
+                        None =>
+                        {
+                            println!("Unknown token {:?} at line {}", t.tstring, t.line_no);
+                            panic!();
+                        },
                     }
                     self.step();
                     continue;
@@ -518,7 +647,7 @@ impl Lexer
         // Second pass : Create the instructions vector
         loop 
         {
-            let t = self.current();
+            let mut t = self.current();
 
             if let Some(t) = t
             {
@@ -1060,11 +1189,11 @@ impl Lexer
                         }
                     }
 
+                    // Get operand
                     if mode != Mode::IMP
                     {
                         match mode 
                         {
-
                             Mode::ABS | Mode::ABSX | Mode::ABSY | Mode::IND => 
                             {
                                 let operand = self.get_operand_u16();
@@ -1073,7 +1202,13 @@ impl Lexer
                                 hex_code.push(hsb);
                                 hex_code.push(lsb);
                             },
-                            Mode::IMM | Mode::INDX | Mode::INDY | Mode::REL | Mode::ZP | Mode::ZPX | Mode::ZPY =>
+                            Mode::IMM | Mode::INDX | Mode::INDY =>
+                            {
+                                self.step();
+                                let operand = self.get_operand_u8();
+                                hex_code.push(operand);
+                            },
+                            Mode::REL | Mode::ZP | Mode::ZPX | Mode::ZPY =>
                             {
                                 let operand = self.get_operand_u8();
                                 hex_code.push(operand);
@@ -1360,14 +1495,28 @@ impl Lexer
         self.tokens.push(t);
         self.step();
         self.current_token = 0;
-
     }
 
     pub fn print_tokens(&self)
     {
         for token in &self.tokens
         {
-            println!("Type: {:?}, String : {}, Line No : {}", token.ttype, token.tstring, token.line_no);
+            println!("#: {} Type: {:?} : {:?}", token.line_no, token.ttype, token.tstring);
+        }
+    }
+
+    pub fn source_from_tokens(&self)
+    {
+        let mut current_line = self.tokens.first().unwrap().line_no;
+        for t in &self.tokens
+        {
+            if t.line_no > current_line
+            {
+                println!();
+                current_line = t.line_no;
+            }
+            print!("{} ", t.tstring);
+
         }
     }
 }
