@@ -1105,228 +1105,248 @@ impl Lexer
 
         let mut unknown_chars_size = 0;
         let mut unknown_chars : Vec<char> = Vec::new();//String::new() ;
+        let mut is_comment : bool = false;
 
         for c in code.chars()
         {
-            if c == ' '
+            if !is_comment
             {
-                // If unknown characters is not empty, then add the token
-                // This check should appear after every known token
-                if unknown_chars_size > 0
+                if c == ';'
                 {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
+                    is_comment = true;
+                    continue;
                 }
 
-                let pt = self.previous();
-
-                if let Some(pt) = pt
+                if c == ' '
                 {
-                    if pt.ttype == TT::WHITE
+                    // If unknown characters is not empty, then add the token
+                    // This check should appear after every known token
+                    if unknown_chars_size > 0
                     {
-                        continue;
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let pt = self.previous();
+
+                    if let Some(pt) = pt
+                    {
+                        if pt.ttype == TT::WHITE
+                        {
+                            continue;
+                        }
+                    }
+
+                    // THINKABOUT : Do we really need to record whitespaces?
+                    //
+                    // let t = Token { ttype: TT::WHITE, tstring:" ".to_string(), line_no:line_no};
+                    // self.tokens.push(t);
+                    // self.step();
+
+                    continue;
+                }
+
+                if c == 'X' || c == 'x'
+                {
+                    let pt = self.previous();
+
+                    if let Some(pt) = pt
+                    {
+                        if pt.ttype == TT::WHITE
+                            || pt.ttype == TT::COMMA
+                            {
+                                let t = Token { ttype: TT::REGX, tstring:"X".to_string(), line_no:line_no};
+                                self.tokens.push(t);
+                                self.step();
+                                continue;
+                            }
                     }
                 }
 
-                // THINKABOUT : Do we really need to record whitespaces?
-                //
-                // let t = Token { ttype: TT::WHITE, tstring:" ".to_string(), line_no:line_no};
-                // self.tokens.push(t);
-                // self.step();
-
-                continue;
-            }
-
-            if c == 'X'
-            {
-                let pt = self.previous();
-
-                if let Some(pt) = pt
+                if c == 'Y' || c == 'y'
                 {
-                    if pt.ttype == TT::WHITE
-                        || pt.ttype == TT::COMMA
-                        {
-                            let t = Token { ttype: TT::REGX, tstring:"X".to_string(), line_no:line_no};
-                            self.tokens.push(t);
-                            self.step();
-                            continue;
-                        }
-                }
-            }
+                    let pt = self.previous();
 
-            if c == 'Y'
-            {
-                let pt = self.previous();
-
-                if let Some(pt) = pt
-                {
-                    if pt.ttype == TT::WHITE
-                        || pt.ttype == TT::COMMA
-                        {
-                            let t = Token { ttype: TT::REGY, tstring:"Y".to_string(), line_no:line_no};
-                            self.tokens.push(t);
-                            self.step();
-                            continue;
-                        }
-                }
-            }
-
-            if c == '#'
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let t = Token { ttype: TT::HASH, tstring:"#".to_string(), line_no:line_no};
-                self.tokens.push(t);
-                self.step();
-                continue;
-            }
-
-            if c == ':'
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let t = Token { ttype: TT::COLON, tstring:":".to_string(), line_no:line_no};
-                self.tokens.push(t);
-                self.step();
-                continue;
-            }
-
-            if c == '$'
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let t = Token { ttype: TT::DOLLAR, tstring:"$".to_string(), line_no:line_no};
-                self.tokens.push(t);
-                self.step();
-                continue;
-            }
-
-            if c == '%'
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let t = Token { ttype: TT::PERCENT, tstring:"%".to_string(), line_no:line_no};
-                self.tokens.push(t);
-                self.step();
-                continue;
-            }
-
-            if c == ','
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let t = Token { ttype: TT::COMMA, tstring:",".to_string(), line_no:line_no};
-                self.tokens.push(t);
-                self.step();
-                continue;
-            }
-
-            if c == '('
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let t = Token { ttype: TT::BRACKETOPEN, tstring:"(".to_string(), line_no:line_no};
-                self.tokens.push(t);
-                self.step();
-                continue;
-            }
-
-            if c == ')'
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let t = Token { ttype: TT::BRACKETCLOSE, tstring:")".to_string(), line_no:line_no};
-                self.tokens.push(t);
-                self.step();
-                continue;
-            }
-
-            if c == '\n'
-            {
-                if unknown_chars_size > 0
-                {
-                    let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
-                    self.tokens.push(t);
-                    self.step();
-                    unknown_chars.clear();
-                    unknown_chars_size = 0;
-                }
-
-                let pt = self.previous();
-
-                if let Some(pt) = pt
-                {
-                    if pt.ttype == TT::NL
+                    if let Some(pt) = pt
                     {
-                        line_no += 1;
-                        continue;
+                        if pt.ttype == TT::WHITE
+                            || pt.ttype == TT::COMMA
+                            {
+                                let t = Token { ttype: TT::REGY, tstring:"Y".to_string(), line_no:line_no};
+                                self.tokens.push(t);
+                                self.step();
+                                continue;
+                            }
                     }
                 }
 
-                // let t = Token { ttype: TT::NL, tstring:"NL".to_string(), line_no:1};
-                // self.tokens.push(t);
-                // self.step();
-                line_no += 1;
+                if c == '#'
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
 
-                continue;
+                    let t = Token { ttype: TT::HASH, tstring:"#".to_string(), line_no:line_no};
+                    self.tokens.push(t);
+                    self.step();
+                    continue;
+                }
+
+                if c == ':'
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let t = Token { ttype: TT::COLON, tstring:":".to_string(), line_no:line_no};
+                    self.tokens.push(t);
+                    self.step();
+                    continue;
+                }
+
+                if c == '$'
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let t = Token { ttype: TT::DOLLAR, tstring:"$".to_string(), line_no:line_no};
+                    self.tokens.push(t);
+                    self.step();
+                    continue;
+                }
+
+                if c == '%'
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let t = Token { ttype: TT::PERCENT, tstring:"%".to_string(), line_no:line_no};
+                    self.tokens.push(t);
+                    self.step();
+                    continue;
+                }
+
+                if c == ','
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let t = Token { ttype: TT::COMMA, tstring:",".to_string(), line_no:line_no};
+                    self.tokens.push(t);
+                    self.step();
+                    continue;
+                }
+
+                if c == '('
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let t = Token { ttype: TT::BRACKETOPEN, tstring:"(".to_string(), line_no:line_no};
+                    self.tokens.push(t);
+                    self.step();
+                    continue;
+                }
+
+                if c == ')'
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(t);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let t = Token { ttype: TT::BRACKETCLOSE, tstring:")".to_string(), line_no:line_no};
+                    self.tokens.push(t);
+                    self.step();
+                    continue;
+                }
+
+                if c == '\r' { continue; }
+
+                if c == '\n'
+                {
+                    if unknown_chars_size > 0
+                    {
+                        let token = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                        self.tokens.push(token);
+                        self.step();
+                        unknown_chars.clear();
+                        unknown_chars_size = 0;
+                    }
+
+                    let pt = self.previous();
+
+                    if let Some(pt) = pt
+                    {
+                        if pt.ttype == TT::NL
+                        {
+                            line_no += 1;
+                            continue;
+                        }
+                    }
+
+                    // let t = Token { ttype: TT::NL, tstring:"NL".to_string(), line_no:1};
+                    // self.tokens.push(t);
+                    // self.step();
+                    line_no += 1;
+
+                    continue;
+                }
+
+                unknown_chars.push(c);
+                unknown_chars_size += 1;
+
             }
-
-            unknown_chars.push(c);
-            unknown_chars_size += 1;
+            else 
+            {
+                if c == '\n'
+                {
+                    line_no += 1;
+                    is_comment = false;
+                }
+            }
         }
-
         if unknown_chars_size > 0
         {
             let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
