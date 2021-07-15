@@ -555,19 +555,30 @@ impl Lexer
         }
 
 
+        // Add labels to labels table
         self.current_token = 0;
         let mut mem_index = 0;
         loop 
         {
             if let Some(t) = self.current()
             {
-                // Set value of label
                 if t.ttype == TT::LABEL
                 {
-                    // self.labels.insert(self.tokens[self.current_token].tstring.clone(), mem_index);
-                    self.labels.insert(self.tokens[self.current_token].tstring.clone(), mem_index);
-                    self.step();
-                    continue;
+                    match self.labels.get(&t.tstring)
+                    {
+                        Some(_) =>
+                        {
+                            println!("Label {:?} at line {} already defined", t.tstring, t.line_no);
+                            panic!();
+                        },
+                        None =>
+                        {
+                            // TODO(James) : This seems messed up
+                            self.labels.insert(self.tokens[self.current_token].tstring.clone(), mem_index);
+                            self.step();
+                            continue;
+                        }
+                    }
                 }
 
                 if t.ttype == TT::INSTRUCTION
