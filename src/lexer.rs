@@ -475,74 +475,21 @@ impl Lexer
                     {
                         if nt.ttype == TT::COLON
                         {
-                            self.tokens[self.current_token].ttype = TT::LABEL;
-                            self.labels.insert(self.tokens[self.current_token].tstring.clone(), 0);
-                        }
-                        else
-                        {
-                            let mut valid = true;
-                            for tc in t.tstring.chars()
+                            // Check for already defined labels
+                            match self.labels.get(&t.tstring)
                             {
-                                if tc < '0'
+                                Some(_) =>
                                 {
-                                    valid = false;
-                                    break;
-                                }
-                                else if tc > 'f'
+                                    println!("Label {:?} at line {} already defined", t.tstring, t.line_no);
+                                    panic!();
+                                },
+                                None =>
                                 {
-                                    valid = false;
-                                    break;
-                                }
-                                else if tc < 'a' && tc > 'A'
-                                {
-                                    valid = false;
-                                    break;
-                                }
-                                else if tc < 'F' && tc > 'A'
-                                {
-                                    valid = false;
-                                    break;
+                                    self.tokens[self.current_token].ttype = TT::LABEL;
+                                    self.labels.insert(self.tokens[self.current_token].tstring.clone(), 0);
+                                    continue;
                                 }
                             }
-
-                            if valid
-                            {
-                                // println!("Type: {:?}, String : {:?}, Line No : {}", nt.ttype, nt.tstring, nt.line_no);
-                                self.tokens[self.current_token].ttype = TT::NUMBER;
-                            }
-                        }
-                    }
-                    // Should we check if operand is a valid number type
-                    else
-                    {
-                        let mut valid = true;
-                        for tc in t.tstring.chars()
-                        {
-                            if tc < '0'
-                            {
-                                valid = false;
-                                break;
-                            }
-                            else if tc > 'f'
-                            {
-                                valid = false;
-                                break;
-                            }
-                            else if tc < 'a' && tc > 'A'
-                            {
-                                valid = false;
-                                break;
-                            }
-                            else if tc < 'F' && tc > 'A'
-                            {
-                                valid = false;
-                                break;
-                            }
-                        }
-
-                        if valid
-                        {
-                            self.tokens[self.current_token].ttype = TT::NUMBER;
                         }
                     }
                 }
@@ -565,21 +512,10 @@ impl Lexer
             {
                 if t.ttype == TT::LABEL
                 {
-                    match self.labels.get(&t.tstring)
-                    {
-                        Some(_) =>
-                        {
-                            println!("Label {:?} at line {} already defined", t.tstring, t.line_no);
-                            panic!();
-                        },
-                        None =>
-                        {
-                            // TODO(James) : This seems messed up
-                            self.labels.insert(self.tokens[self.current_token].tstring.clone(), mem_index);
-                            self.step();
-                            continue;
-                        }
-                    }
+                    // TODO(James) : This seems messed up
+                    self.labels.insert(self.tokens[self.current_token].tstring.clone(), mem_index);
+                    self.step();
+                    continue;
                 }
 
                 if t.ttype == TT::INSTRUCTION
