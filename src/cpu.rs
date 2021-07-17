@@ -56,6 +56,18 @@ impl Cpu
         self.sr = 0;
     }
 
+    fn get_abs_value(&mut self) -> u16
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+        self.pc += 2;
+        res
+    }
+
     fn get_abs(&mut self) -> u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -1095,195 +1107,754 @@ impl Cpu
             {
                 let operand = self.get_abs();
 
+                self.a ^= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::EOR_ABSX =>
             {
                 let operand = self.get_absx();
 
+                self.x ^= operand;
+
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::EOR_ABSY =>
             {
                 let operand = self.get_absy();
 
+                self.y ^= operand;
+
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::EOR_IMM =>
             {
                 let operand = self.get_imm();
 
+                self.a ^= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::EOR_INDX =>
             {
                 let operand = self.get_indx();
 
+                self.x ^= operand;
+
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::EOR_INDY =>
             {
                 let operand = self.get_indy();
+
+                self.y ^= operand;
+
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
 
             },
             isa::Instruction::EOR_ZP =>
             {
                 let operand = self.get_zp();
 
+                self.a ^= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::EOR_ZPX =>
             {
                 let operand = self.get_zpx();
 
+                self.x ^= operand;
+
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::INC_ABS =>
             {
-                let operand = self.get_abs();
+                let operand = self.get_abs_ref();
 
+                *operand = operand.wrapping_add(1);
+
+                let result = *operand;
+
+                if result >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::INC_ABSX =>
             {
-                let operand = self.get_absx();
+                let operand = self.get_absx_ref();
 
+                *operand = operand.wrapping_add(1);
+                let result = *operand;
+
+                if result >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::INC_ZP =>
             {
-                let operand = self.get_zp();
+                let operand = self.get_zp_ref();
 
+                *operand = operand.wrapping_add(1);
+
+                let result = *operand;
+
+                if result >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::INC_ZPX =>
             {
-                let operand = self.get_zpx();
+                let operand = self.get_zpx_ref();
 
+                *operand = operand.wrapping_add(1);
+
+                let result = *operand;
+
+                if result >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if result == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::INX_IMP =>
             {
+                self.a = self.a.wrapping_add(1);
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::INY_IMP =>
             {
+                self.y = self.a.wrapping_add(1);
+
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::JMP_ABS =>
             {
-                let operand = self.get_abs();
+                let operand = self.get_abs_value();
 
+                self.pc = operand;
             },
             isa::Instruction::JMP_IND =>
             {
                 let operand = self.get_ind();
 
+                self.pc = operand;
             },
             isa::Instruction::JSR_ABS =>
             {
-                let operand = self.get_abs();
+                let operand = self.get_abs_value();
 
+                self.stack_push_16(self.pc);
+                self.pc = operand;
             },
             isa::Instruction::LDA_ABS =>
             {
                 let operand = self.get_abs();
+                
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
 
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDA_ABSX =>
             {
                 let operand = self.get_absx();
 
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDA_ABSY =>
             {
                 let operand = self.get_absy();
 
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDA_IMM =>
             {
                 let operand = self.get_imm();
 
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDA_INDX =>
             {
                 let operand = self.get_indx();
 
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDA_INDY =>
             {
                 let operand = self.get_indy();
 
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDA_ZP =>
             {
                 let operand = self.get_zp();
 
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDA_ZPX =>
             {
                 let operand = self.get_zpx();
 
+                self.a = operand;
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDX_ABS =>
             {
                 let operand = self.get_abs();
 
+                self.x = operand;
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDX_ABSY =>
             {
                 let operand = self.get_absy();
 
+                self.x = operand;
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDX_IMM =>
             {
                 let operand = self.get_imm();
 
+                self.x = operand;
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDX_ZP =>
             {
                 let operand = self.get_zp();
 
+                self.x = operand;
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDX_ZPY =>
             {
                 let operand = self.get_zpy();
 
+                self.x = operand;
+                if self.x >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.x == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDY_ABS =>
             {
                 let operand = self.get_abs();
 
+                self.y = operand;
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDY_ABSX =>
             {
                 let operand = self.get_absx();
 
+                self.y = operand;
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDY_IMM =>
             {
                 let operand = self.get_imm();
 
+                self.y = operand;
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDY_ZP =>
             {
                 let operand = self.get_zp();
 
+                self.y = operand;
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LDY_ZPX =>
             {
                 let operand = self.get_zpx();
 
+                self.y = operand;
+                if self.y >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.y == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LSR_ACC =>
             {
+                let lsb = self.a >> 7;
+
+                if lsb == 0
+                {
+                    self.sr &= !Cpu::CarryFlag;
+                }
+                else
+                {
+                    self.sr |= Cpu::CarryFlag;
+                }
+
+                self.a >>= 1;
+
+                if self.a == 0
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LSR_ABS =>
             {
-                let operand = self.get_abs();
+                let operand = self.get_abs_ref();
 
+                let lsb = *operand >> 7;
+                *operand >>= 1;
+                let res = *operand;
+
+                if lsb == 0
+                {
+                    self.sr &= !Cpu::CarryFlag;
+                }
+                else
+                {
+                    self.sr |= Cpu::CarryFlag;
+                }
+
+                if res == 0
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LSR_ABSX =>
             {
-                let operand = self.get_absx();
+                let operand = self.get_absx_ref();
 
+                let lsb = *operand >> 7;
+                *operand >>= 1;
+                let res = *operand;
+
+                if lsb == 0
+                {
+                    self.sr &= !Cpu::CarryFlag;
+                }
+                else
+                {
+                    self.sr |= Cpu::CarryFlag;
+                }
+
+                if res == 0
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LSR_ZP =>
             {
-                let operand = self.get_zp();
+                let operand = self.get_zp_ref();
 
+                let lsb = *operand >> 7;
+                *operand >>= 1;
+                let res = *operand;
+
+                if lsb == 0
+                {
+                    self.sr &= !Cpu::CarryFlag;
+                }
+                else
+                {
+                    self.sr |= Cpu::CarryFlag;
+                }
+
+                if res == 0
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::LSR_ZPX =>
             {
-                let operand = self.get_zpx();
+                let operand = self.get_zpx_ref();
 
+                let lsb = *operand >> 7;
+                *operand >>= 1;
+                let res = *operand;
+
+                if lsb == 0
+                {
+                    self.sr &= !Cpu::CarryFlag;
+                }
+                else
+                {
+                    self.sr |= Cpu::CarryFlag;
+                }
+
+                if res == 0
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::NOP_IMP =>
             {
@@ -1292,56 +1863,193 @@ impl Cpu
             {
                 let operand = self.get_abs();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::ORA_ABSX =>
             {
                 let operand = self.get_absx();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::ORA_ABSY =>
             {
                 let operand = self.get_absy();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::ORA_IMM =>
             {
                 let operand = self.get_imm();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::ORA_INDX =>
             {
                 let operand = self.get_indx();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::ORA_INDY =>
             {
                 let operand = self.get_indy();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::ORA_ZP =>
             {
                 let operand = self.get_zp();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::ORA_ZPX =>
             {
                 let operand = self.get_zpx();
 
+                self.a |= operand;
+
+                if self.a >> 7 == 1
+                {
+                    self.sr |= Cpu::NegFlag;
+                }
+
+                if self.a == 0
+                {
+                    self.sr |= Cpu::ZeroFlag;
+                }
+                else
+                {
+                    self.sr &= !Cpu::ZeroFlag;
+                }
             },
             isa::Instruction::PHA_IMP =>
             {
+                self.stack_push(self.a);
             },
             isa::Instruction::PHP_IMP =>
             {
+                self.stack_push(self.sr);
             },
             isa::Instruction::PLA_IMP =>
             {
+                self.a = self.stack_pop();
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::PLP_IMP =>
             {
+                self.sp = self.stack_pop();
             },
             isa::Instruction::ROL_ACC =>
             {
+                let lsb = (self.a << 7) >> 7;
+                let hsb = self.a >> 7;
+                let prev_carry = self.sr & Cpu::CarryFlag;
+
+                self.a <<= 1;
+                self.a |= prev_carry;
+
+                self.sr &= hsb;
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::ROL_ABS =>
             {
