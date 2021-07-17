@@ -97,8 +97,7 @@ impl Lexer
         self.current_token += steps;
     }
 
-    // TODO : (James) This function should return a reulst for better error handling
-    pub fn get_operand_u8(&self) -> u8
+    pub fn get_operand_u8(&self) -> Result<u8, ParseIntError>
     {
         if let Some(nt) = self.next()
         {
@@ -106,32 +105,34 @@ impl Lexer
             {
                 if let Some(nt2) = self.nextx(2)
                 {
-                    return u8::from_str_radix(&nt2.tstring, 16).unwrap();
+                    return u8::from_str_radix(&nt2.tstring, 16);
                 }
+
                 panic!("INVALID hex value after {} at {}", nt.tstring, nt.line_no);
             }
             if nt.ttype == TT::PERCENT
             {
                 if let Some(nt2) = self.nextx(2)
                 {
-                    return u8::from_str_radix(&nt2.tstring, 2).unwrap();
+                    return u8::from_str_radix(&nt2.tstring, 2);
                 }
+
                 panic!("INVALID bin value after {} at {}", nt.tstring, nt.line_no);
             }
 
             if nt.ttype == TT::LABEL_OPERAND
             {
-                return u8::from_str_radix(&nt.tstring, 16).unwrap();
+                return u8::from_str_radix(&nt.tstring, 16);
             }
 
-            return u8::from_str_radix(&nt.tstring, 10).unwrap();
+            return u8::from_str_radix(&nt.tstring, 10);
         }
-        return u8::from_str_radix("raise err", 10).unwrap();
+
+        return u8::from_str_radix("raise err", 10);
 
     }
 
-    // TODO : (James) This function should return a reulst for better error handling
-    pub fn get_operand_u16(&self) -> u16
+    pub fn get_operand_u16(&self) -> Result<u16, ParseIntError>
     {
         if let Some(nt) = self.next()
         {
@@ -139,26 +140,26 @@ impl Lexer
             {
                 if let Some(nt2) = self.nextx(2)
                 {
-                    return u16::from_str_radix(&nt2.tstring, 16).unwrap();
+                    return u16::from_str_radix(&nt2.tstring, 16);
                 }
             }
             if nt.ttype == TT::PERCENT
             {
                 if let Some(nt2) = self.nextx(2)
                 {
-                    return u16::from_str_radix(&nt2.tstring, 2).unwrap();
+                    return u16::from_str_radix(&nt2.tstring, 2);
                 }
             }
 
             if nt.ttype == TT::LABEL_OPERAND
             {
-                return u16::from_str_radix(&nt.tstring, 16).unwrap();
+                return u16::from_str_radix(&nt.tstring, 16);
             }
 
-            // println!("Type: {:?}, String : {:?}, Line No : {}", nt.ttype, nt.tstring, nt.line_no);
-            return u16::from_str_radix(&nt.tstring, 10).unwrap();
+            return u16::from_str_radix(&nt.tstring, 10);
         }
-        return u16::from_str_radix("raise err", 10).unwrap();
+
+        return u16::from_str_radix("raise err", 10);
 
     }
 
