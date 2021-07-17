@@ -546,13 +546,57 @@ impl Lexer
                     continue;
                 }
 
-                self.step();
+                if t.ttype == TT::UNKNOWN
+                {
+                    match self.labels.get(&t.tstring)
+                    {
+                        None =>
+                        {
+                            let mut valid = true;
+                            for tc in t.tstring.chars()
+                            {
+                                if tc < '0'
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                                else if tc > 'f'
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                                else if tc < 'a' && tc > 'A'
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                                else if tc < 'F' && tc > 'A'
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                            }
 
+                            if valid
+                            {
+                                // println!("Type: {:?}, String : {:?}, Line No : {}", nt.ttype, nt.tstring, nt.line_no);
+                                self.tokens[self.current_token].ttype = TT::NUMBER;
+                            }
+                        },
+                        Some(_) => {}
+                    }
+
+                    self.step();
+                    continue;
+                }
             }
-            else 
+            else
             {
                 break;
             }
+
+            self.step();
+            continue;
         }
 
         self.current_token = 0;
@@ -638,6 +682,7 @@ impl Lexer
                         match mode
                         {
                             Mode::ACC => hex_code.push(Instruction::ASL_ACC),
+                            Mode::IMP => {},
                             Mode::ZP => hex_code.push(Instruction::ASL_ZP),
                             Mode::ZPX => hex_code.push(Instruction::ASL_ZPX),
                             Mode::ABS => hex_code.push(Instruction::ASL_ABS),
@@ -1144,22 +1189,88 @@ impl Lexer
                         {
                             Mode::ABS | Mode::ABSX | Mode::ABSY | Mode::IND => 
                             {
-                                let operand = self.get_operand_u16();
-                                let hsb:u8 = (operand << 8) as u8;
-                                let lsb:u8 = operand as u8;
-                                hex_code.push(hsb);
-                                hex_code.push(lsb);
+                                match self.get_operand_u16()
+                                {
+                                    Ok(operand) =>
+                                    {
+                                        let hsb:u8 = (operand << 8) as u8;
+                                        let lsb:u8 = operand as u8;
+                                        hex_code.push(hsb);
+                                        hex_code.push(lsb);
+                                    },
+                                    Err(e) =>
+                                    {
+                                        println!("Error : {}", e);
+                                        panic!();
+                                    }
+
+                                }
                             },
                             Mode::IMM | Mode::INDX | Mode::INDY =>
                             {
                                 self.step();
-                                let operand = self.get_operand_u8();
-                                hex_code.push(operand);
+
+                                match self.get_operand_u8()
+                                {
+                                    Ok(operand) =>
+                                    {
+                                        hex_code.push(operand);
+                                    },
+                                    Err(e) =>
+                                    {
+                                        println!("Error : {}", e);
+                                        panic!();
+                                    }
+
+                                }
                             },
-                            Mode::REL | Mode::ZP | Mode::ZPX | Mode::ZPY =>
+                            Mode::REL =>
                             {
-                                let operand = self.get_operand_u8();
-                                hex_code.push(operand);
+                                match self.get_operand_u8()
+                                {
+                                    Ok(operand) =>
+                                    {
+                                        hex_code.push(operand);
+                                    },
+                                    Err(e) =>
+                                    {
+                                        // TODO: This should do error matching for
+                                        // IntErrorKind::PosOverflow to see if it might be a u16
+                                        match self.get_operand_u16()
+                                        {
+                                            Ok(operand) =>
+                                            {
+                                                let hsb:u8 = (operand << 8) as u8;
+                                                let lsb:u8 = operand as u8;
+                                                hex_code.push(hsb);
+                                                hex_code.push(lsb);
+                                            },
+                                            Err(e) =>
+                                            {
+                                                println!("Error : {}", e);
+                                                panic!();
+                                            }
+
+                                        }
+                                    }
+
+                                }
+                            },
+                            Mode::ZP | Mode::ZPX | Mode::ZPY =>
+                            {
+                                match self.get_operand_u8()
+                                {
+                                    Ok(operand) =>
+                                    {
+                                        hex_code.push(operand);
+                                    },
+                                    Err(e) =>
+                                    {
+                                        println!("Error : {}", e);
+                                        panic!();
+                                    }
+
+                                }
                             },
                             _ => panic!("Unknown addressing mode"),
                         }
