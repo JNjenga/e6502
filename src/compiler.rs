@@ -20,6 +20,13 @@ fn main() {
     // Read file from disk
     let args: Vec<String> = env::args().collect();
 
+    if args.len() < 2
+    {
+        // TODO(James) : Better arg handling/Errors?
+        println!("Example : e6502c source.asm out.bin");
+        panic!();
+    }
+
     let source_file_path = &args[1];
     let out_file_path = &args[2];
 
