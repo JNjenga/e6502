@@ -223,6 +223,55 @@ impl Cpu
         self.mem[usize::from(value)]
     }
 
+    fn stack_push(&mut self, value : u8)
+    {
+        self.mem[usize::from(0x100 + u16::from(self.sp))] = value;
+        self.sp -= 1;
+    }
+
+    fn stack_push_16(&mut self, value : u16)
+    {
+        self.mem[usize::from(0x100 + u16::from(self.sp))] = value as u8;
+        self.sp -= 1;
+        self.mem[usize::from(0x100 + u16::from(self.sp))]  = ((value << 8) >> 8) as u8;
+        self.sp -= 1;
+    }
+
+    fn stack_pop(&mut self) -> u8
+    {
+        self.sp += 1;
+        let value = self.mem[usize::from(0x100 + u16::from(self.sp))];
+        self.mem[usize::from(0x100 + u16::from(self.sp))] = 0;
+
+        value
+    }
+
+    #[inline(always)]
+    fn set_zerof(&mut self, value: u8, clear : bool)
+    {
+        if value == 0
+        {
+            self.sr |= Cpu::ZeroFlag;
+        }
+        else if clear
+        {
+            self.sr &= !Cpu::ZeroFlag;
+        }
+    }
+
+    #[inline(always)]
+    fn set_negf(&mut self, value: u8, clear : bool)
+    {
+        if value >> 7 == 1
+        {
+            self.sr |= Cpu::NegFlag;
+        }
+        else if clear
+        {
+            self.sr &= !Cpu::NegFlag;
+        }
+    }
+
     fn execute_instruction(&mut self, opcode: u8)
     {
         match opcode
