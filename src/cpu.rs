@@ -559,36 +559,82 @@ impl Cpu
             },
             isa::Instruction::ASL_ACC =>
             {
-                let operand = self.get_abs();
+                let hsb = self.a >> 7;
+                let prev_carry = self.sr & Cpu::CarryFlag;
+
                 self.a <<= 1;
+                self.a |= prev_carry;
+
+                self.sr &= hsb;
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::ASL_ABS =>
             {
+                let prev_carry = self.sr & Cpu::CarryFlag;
+
                 let operand = self.get_abs_ref();
+                let hsb = *operand >> 7;
+
                 *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ASL_ABSX =>
             {
+                let prev_carry = self.sr & Cpu::CarryFlag;
+
                 let operand = self.get_absx_ref();
+                let hsb = *operand >> 7;
+
                 *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ASL_ZP =>
             {
+                let prev_carry = self.sr & Cpu::CarryFlag;
+
                 let operand = self.get_zp_ref();
+                let hsb = *operand >> 7;
+
                 *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ASL_ZPX =>
             {
+                let prev_carry = self.sr & Cpu::CarryFlag;
+
                 let operand = self.get_zpx_ref();
+                let hsb = *operand >> 7;
+
                 *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::BCC_REL =>
             {
                 let carry_flag = self.sr & Cpu::CarryFlag;
                 if carry_flag == 0
                 {
-                    let operand = self.get_rel();
-                    self.pc = operand;
+                    self.pc = self.get_rel();
                 }
             },
             isa::Instruction::BCS_REL =>
@@ -596,8 +642,7 @@ impl Cpu
                 let carry_flag = self.sr & Cpu::CarryFlag;
                 if carry_flag == Cpu::CarryFlag
                 {
-                    let operand = self.get_rel();
-                    self.pc = operand;
+                    self.pc = self.get_rel();
                 }
             },
             isa::Instruction::BEQ_REL =>
@@ -605,8 +650,7 @@ impl Cpu
                 let zero_flag = self.sr & Cpu::ZeroFlag;
                 if zero_flag == Cpu::ZeroFlag
                 {
-                    let operand = self.get_rel();
-                    self.pc = operand;
+                    self.pc = self.get_rel();
                 }
             },
             isa::Instruction::BIT_ABS =>
@@ -780,7 +824,6 @@ impl Cpu
             isa::Instruction::CMP_ABSY =>
             {
                 let operand = self.get_absy();
-                let option = self.a.checked_add(operand);
 
                 if self.a > operand
                 {
@@ -801,7 +844,6 @@ impl Cpu
             isa::Instruction::CMP_IMM =>
             {
                 let operand = self.get_imm();
-                let option = self.a.checked_add(operand);
 
                 if self.a > operand
                 {
@@ -822,7 +864,6 @@ impl Cpu
             isa::Instruction::CMP_INDX =>
             {
                 let operand = self.get_indx();
-                let option = self.a.checked_add(operand);
 
                 if self.a > operand
                 {
@@ -2055,7 +2096,6 @@ impl Cpu
             },
             isa::Instruction::ROL_ACC =>
             {
-                let lsb = (self.a << 7) >> 7;
                 let hsb = self.a >> 7;
                 let prev_carry = self.sr & Cpu::CarryFlag;
 
