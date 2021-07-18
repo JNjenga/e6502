@@ -258,6 +258,21 @@ impl Cpu
         value
     }
 
+    fn stack_pop_16(&mut self) -> u16
+    {
+        self.sp += 1;
+        let lsb = self.mem[usize::from(0x100 + u16::from(self.sp))];
+        self.mem[usize::from(0x100 + u16::from(self.sp))] = 0;
+        self.sp += 1;
+        let hsb = self.mem[usize::from(0x100 + u16::from(self.sp))];
+        self.mem[usize::from(0x100 + u16::from(self.sp))] = 0;
+
+        let mut res: u16 = u16::from(hsb);
+        res = (res << 8) | u16::from(lsb);
+
+        res
+    }
+
     #[inline(always)]
     fn set_zerof(&mut self, value: u8, clear : bool)
     {
