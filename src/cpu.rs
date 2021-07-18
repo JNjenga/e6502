@@ -2108,52 +2108,145 @@ impl Cpu
             },
             isa::Instruction::ROL_ABS =>
             {
-                let operand = self.get_abs();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_abs_ref();
+                let hsb = *operand >> 7;
+
+                *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ROL_ABSX =>
             {
-                let operand = self.get_absx();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_absx_ref();
+                let hsb = *operand >> 7;
+
+                *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ROL_ZP =>
             {
-                let operand = self.get_zp();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_zp_ref();
+                let hsb = *operand >> 7;
+
+                *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ROL_ZPX =>
             {
-                let operand = self.get_zpx();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_zpx_ref();
+                let hsb = *operand >> 7;
+
+                *operand <<= 1;
+                *operand |= prev_carry;
+
+                let res = *operand;
+                self.sr &= hsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ROR_ACC =>
             {
+                let lsb = (self.a << 7) >> 7;
+                let prev_carry = self.sr & Cpu::CarryFlag;
+
+                self.a >>= 1;
+                self.a |= prev_carry << 7;
+
+                self.sr &= lsb;
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::ROR_ABS =>
             {
-                let operand = self.get_abs();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_abs_ref();
+                let lsb = (*operand << 7) >> 7;
+
+                *operand >>= 1;
+                *operand |= prev_carry << 7;
+
+                let res = *operand;
+                self.sr &= lsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ROR_ABSX =>
             {
-                let operand = self.get_absx();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_absx_ref();
+                let lsb = (*operand << 7) >> 7;
+
+                *operand >>= 1;
+                *operand |= prev_carry << 7;
+
+                let res = *operand;
+                self.sr &= lsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ROR_ZP =>
             {
-                let operand = self.get_zp();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_zp_ref();
+                let lsb = (*operand << 7) >> 7;
+
+                *operand >>= 1;
+                *operand |= prev_carry << 7;
+
+                let res = *operand;
+                self.sr &= lsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::ROR_ZPX =>
             {
-                let operand = self.get_zpx();
+                let prev_carry = self.sr & Cpu::CarryFlag;
 
+                let operand = self.get_zpx_ref();
+                let lsb = (*operand << 7) >> 7;
+
+                *operand >>= 1;
+                *operand |= prev_carry << 7;
+
+                let res = *operand;
+                self.sr &= lsb;
+                self.set_zerof(res, true);
+                self.set_negf(res, true);
             },
             isa::Instruction::RTI_IMP =>
             {
+                self.sp = self.stack_pop();
+                self.pc = self.stack_pop_16();
             },
             isa::Instruction::RTS_IMP =>
             {
+                self.pc = self.stack_pop_16();
+                self.pc -= 1;
             },
             isa::Instruction::SBC_ABS =>
             {
@@ -2197,95 +2290,109 @@ impl Cpu
             },
             isa::Instruction::SEC_IMP =>
             {
+                self.sr |= Cpu::CarryFlag;
             },
             isa::Instruction::SED_IMP =>
             {
+                self.sr |= Cpu::DecimalFlag;
             },
             isa::Instruction::SEI_IMP =>
             {
+                self.sr |= Cpu::InterruptFlag;
             },
             isa::Instruction::STA_ABS =>
             {
-                let operand = self.get_abs();
-
+                self.a = self.get_abs();
             },
             isa::Instruction::STA_ABSX =>
             {
-                let operand = self.get_absx();
-
+                self.a = self.get_absx();
             },
             isa::Instruction::STA_ABSY =>
             {
-                let operand = self.get_absy();
-
+                self.a = self.get_absy();
             },
             isa::Instruction::STA_INDX =>
             {
-                let operand = self.get_indx();
-
+                self.a = self.get_indx();
             },
             isa::Instruction::STA_INDY =>
             {
-                let operand = self.get_indy();
-
+                self.a = self.get_indy();
             },
             isa::Instruction::STA_ZP =>
             {
-                let operand = self.get_zp();
-
+                self.a = self.get_zp();
             },
             isa::Instruction::STA_ZPX =>
             {
-                let operand = self.get_zpx();
-
+                self.a = self.get_zpx();
             },
             isa::Instruction::STX_ABS =>
             {
-                let operand = self.get_abs();
-
+                self.x = self.get_abs();
             },
             isa::Instruction::STX_ZP =>
             {
-                let operand = self.get_zp();
+                self.x = self.get_zp();
 
             },
             isa::Instruction::STX_ZPY =>
             {
-                let operand = self.get_zpy();
+                self.x = self.get_zpy();
 
             },
             isa::Instruction::STY_ABS =>
             {
-                let operand = self.get_abs();
+                self.y = self.get_abs();
 
             },
             isa::Instruction::STY_ZP =>
             {
-                let operand = self.get_zp();
-
+                self.y = self.get_zp();
             },
             isa::Instruction::STY_ZPX =>
             {
-                let operand = self.get_zpx();
-
+                self.y = self.get_zpx();
             },
             isa::Instruction::TAX_IMP =>
             {
+                self.x = self.a;
+
+                self.set_zerof(self.x, true);
+                self.set_negf(self.x, true);
             },
             isa::Instruction::TAY_IMP =>
             {
+                self.y = self.a;
+
+                self.set_zerof(self.y, true);
+                self.set_negf(self.y, true);
             },
             isa::Instruction::TSX_IMP =>
             {
+                self.x = self.sr;
+
+                self.set_zerof(self.x, true);
+                self.set_negf(self.x, true);
             },
             isa::Instruction::TXA_IMP =>
             {
+                self.a = self.x;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::TXS_IMP =>
             {
+                self.sr = self.x;
             },
             isa::Instruction::TYA_IMP =>
             {
+                self.a = self.y;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             _ => panic!("Opcode not supported")
 
