@@ -299,6 +299,15 @@ impl Cpu
         }
     }
 
+    fn set_vflag(&mut self, prev_value:u8, value:u8)
+    {
+        if prev_value != (value & 0b10000000)
+            && (prev_value &  0b10000000) == 0x1
+            {
+                self.sr |= Cpu::OverFlowFlag;
+            }
+    }
+
     fn execute_instruction(&mut self, opcode: u8)
     {
         match opcode
@@ -307,213 +316,216 @@ impl Cpu
             {
                 let operand = self.get_imm();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
                 }
             },
             isa::Instruction::ADC_ABS =>
             {
                 let operand = self.get_abs();
+
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
                 }
             },
             isa::Instruction::ADC_ABSX =>
             {
                 let operand = self.get_absx();
+
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
-                }
-                match option
-                {
-                    None => { self.sr |= Cpu::OverFlowFlag; },
-                    _ => {}
                 }
             },
             isa::Instruction::ADC_ABSY =>
             {
                 let operand = self.get_absy();
+
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
                 }
             },
             isa::Instruction::ADC_INDX =>
             {
                 let operand = self.get_indx();
+
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
                 }
             },
             isa::Instruction::ADC_INDY =>
             {
                 let operand = self.get_indy();
+
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
                 }
             },
             isa::Instruction::ADC_ZP =>
             {
                 let operand = self.get_zp();
+
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
                 }
             },
             isa::Instruction::ADC_ZPX =>
             {
                 let operand = self.get_zpx();
+
+                // Previous a
+                let prev_a = self.a & 0b10000000;
                 let option = self.a.checked_add(operand);
 
                 match option
                 {
                     None => 
                     {
-                        self.sr |= Cpu::OverFlowFlag;
+                        self.a = 0;
                         self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
                     },
                     Some(value) =>
                     {
-                        if value == 0
-                        {
-                            self.sr |= Cpu::ZeroFlag;
-                        }
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
 
-                        if value >> 7 == 0
-                        {
-                            self.sr |= Cpu::NegFlag;
-                        }
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
                     }
                 }
             },
@@ -2252,41 +2264,217 @@ impl Cpu
             {
                 let operand = self.get_abs();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SBC_ABSX =>
             {
                 let operand = self.get_absx();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SBC_ABSY =>
             {
                 let operand = self.get_absy();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SBC_IMM =>
             {
                 let operand = self.get_imm();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SBC_INDX =>
             {
                 let operand = self.get_indx();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SBC_INDY =>
             {
                 let operand = self.get_indy();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SBC_ZP =>
             {
                 let operand = self.get_zp();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SBC_ZPX =>
             {
                 let operand = self.get_zpx();
 
+                // Previous a
+                let prev_a = self.a & 0b10000000;
+                let option = self.a.checked_sub(operand);
+
+                match option
+                {
+                    None => 
+                    {
+                        self.a = 0;
+                        self.sr |= Cpu::CarryFlag;
+                        self.set_zerof(self.a, true);
+                    },
+                    Some(value) =>
+                    {
+                        self.a = value;
+                        self.set_zerof(self.a, true);
+                        self.set_negf(self.a, false);
+
+                        // Set overflow flag
+                        self.set_vflag(prev_a, self.a);
+                    }
+                }
             },
             isa::Instruction::SEC_IMP =>
             {
