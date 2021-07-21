@@ -2,42 +2,52 @@ mod isa;
 mod lexer;
 mod cpu;
 
-use std::collections::HashMap;
-use std::env;
+// use std::env;
 // use std::io::Write;
+// use std::fs;
+use std::env;
 use std::fs;
+use std::fs::OpenOptions;
+use std::io::Write;
 
-fn main() {
-    let mut lex = lexer::Lexer 
+fn main()
+{
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2
     {
-        tokens:Vec::new(),
-        current_token:0,
-        labels:HashMap::new()
+        // TODO(James) : Better arg handling/Errors?
+        println!("Example : e6502 program.bin");
+        panic!();
+    }
+
+    // Initialize cpu
+    let mut cpu = cpu::Cpu
+    {
+        a: 0,
+        x: 0,
+        y: 0,
+        sp: 0,
+        pc: 0x600,
+        sr: 0,
+        mem: [0;1<<16],
     };
 
-    lex.tokenize("
-    start:
-     jmp start
-     bne start
-     cmp 16
-     txa
-     sta $200, X
-     sta $300, y
-     sta $400, y
-     sta $500, y
-     iny
-     tya
-     cmp 16
-     iny
-     jmp start
-    do:
-     iny
-     iny
-     iny
-     iny
-    jmp start".to_string().to_uppercase());
-    let out = lex.parse();
-    println!("{:?}", out);
+    let data = fs::read(&args[1]).expect("Unable to read file");
 
-    fs::write("out.bin", out).expect("Unknown error while writinng to bin");
+    for i in 0..data.len()
+    {
+        cpu.mem[usize::from(cpu.pc + i as u16)] = data[i];
+    }
+
+    // Initialize sdl2
+    // let sdl_context = sdl2::init()?;
+    // let video_subsystem = sdl_context.video()?;
+
+    while cpu.pc < ((data.len() as u16) + 0x600)
+    {
+        cpu.step();
+        cpu.print_regs();
+        println!("--------------");
+    }
 }
