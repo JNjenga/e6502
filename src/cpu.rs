@@ -2576,6 +2576,14 @@ impl Cpu
         }
     }
 
+    pub fn step(&mut self)
+    {
+        let opcode = self.mem[self.pc as usize];
+        self.pc += 1;
+
+        self.execute_instruction(opcode);
+    }
+
     pub fn print_regs(&self)
     {
         println!("Reg\tValue");
@@ -2585,6 +2593,6 @@ impl Cpu
         println!("Y\t{:02x}", self.y);
         println!("SP\t{:02x}", self.sp);
         println!("PC\t{:04x}", self.pc);
-        println!("ST\t{:04x}", self.sr);
+        println!("ST\t{:08b}", self.sr);
     }
 }
