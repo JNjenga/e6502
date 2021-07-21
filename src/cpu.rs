@@ -831,19 +831,16 @@ impl Cpu
             {
                 let operand = self.get_abs();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -851,19 +848,16 @@ impl Cpu
             {
                 let operand = self.get_absx();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -871,19 +865,16 @@ impl Cpu
             {
                 let operand = self.get_absy();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -891,19 +882,16 @@ impl Cpu
             {
                 let operand = self.get_imm();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -911,19 +899,16 @@ impl Cpu
             {
                 let operand = self.get_indx();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -931,19 +916,16 @@ impl Cpu
             {
                 let operand = self.get_indy();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -951,19 +933,16 @@ impl Cpu
             {
                 let operand = self.get_zp();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -971,19 +950,16 @@ impl Cpu
             {
                 let operand = self.get_zpx();
 
-                if self.a > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.a < operand
+                if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.a >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -991,19 +967,16 @@ impl Cpu
             {
                 let operand = self.get_abs();
 
-                if self.x > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.x < operand
+                if self.x < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.x == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.x >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -1011,19 +984,16 @@ impl Cpu
             {
                 let operand = self.get_imm();
 
-                if self.x > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.x < operand
+                if self.x < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.x == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.x >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -1031,19 +1001,16 @@ impl Cpu
             {
                 let operand = self.get_zp();
 
-                if self.x > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.x < operand
+                if self.x < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.x == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.x >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -1051,19 +1018,16 @@ impl Cpu
             {
                 let operand = self.get_abs();
 
-                if self.y > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.y < operand
+                if self.y < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.y == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.y >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -1071,19 +1035,16 @@ impl Cpu
             {
                 let operand = self.get_imm();
 
-                if self.y > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.y < operand
+                if self.y < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.y == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.y >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -1091,19 +1052,16 @@ impl Cpu
             {
                 let operand = self.get_zp();
 
-                if self.y > operand
-                {
-                    self.sr |= Cpu::CarryFlag;
-                    self.sr &= !Cpu::ZeroFlag;
-                }
-                else if self.y < operand
+                if self.y < operand
                 {
                     self.sr |= Cpu::NegFlag;
-                    self.sr &= !Cpu::ZeroFlag;
                 }
                 else if self.y == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                }
+                else if self.y >= operand
+                {
                     self.sr |= Cpu::CarryFlag;
                 }
             },
@@ -1455,14 +1413,14 @@ impl Cpu
             },
             isa::Instruction::INX_IMP =>
             {
-                self.a = self.a.wrapping_add(1);
+                self.x = self.x.wrapping_add(1);
 
-                if self.a >> 7 == 1
+                if self.x >> 7 == 1
                 {
                     self.sr |= Cpu::NegFlag;
                 }
 
-                if self.a == 0
+                if self.x == 0
                 {
                     self.sr |= Cpu::ZeroFlag;
                 }
@@ -1473,7 +1431,7 @@ impl Cpu
             },
             isa::Instruction::INY_IMP =>
             {
-                self.y = self.a.wrapping_add(1);
+                self.y = self.y.wrapping_add(1);
 
                 if self.y >> 7 == 1
                 {
@@ -2524,58 +2482,55 @@ impl Cpu
             },
             isa::Instruction::STA_ABS =>
             {
-                self.a = self.get_abs();
+                 *self.get_abs_ref() = self.a;
             },
             isa::Instruction::STA_ABSX =>
             {
-                self.a = self.get_absx();
+                 *self.get_absx_ref() = self.a;
             },
             isa::Instruction::STA_ABSY =>
             {
-                self.a = self.get_absy();
+                 *self.get_absy_ref() = self.a;
             },
             isa::Instruction::STA_INDX =>
             {
-                self.a = self.get_indx();
+                 *self.get_indx_ref() = self.a;
             },
             isa::Instruction::STA_INDY =>
             {
-                self.a = self.get_indy();
+                 *self.get_indy_ref() = self.a;
             },
             isa::Instruction::STA_ZP =>
             {
-                self.a = self.get_zp();
+                 *self.get_zp_ref() = self.a;
             },
             isa::Instruction::STA_ZPX =>
             {
-                self.a = self.get_zpx();
+                 *self.get_zpx_ref() = self.a;
             },
             isa::Instruction::STX_ABS =>
             {
-                self.x = self.get_abs();
+                 *self.get_abs_ref() = self.x;
             },
             isa::Instruction::STX_ZP =>
             {
-                self.x = self.get_zp();
-
+                 *self.get_zp_ref() = self.x;
             },
             isa::Instruction::STX_ZPY =>
             {
-                self.x = self.get_zpy();
-
+                 *self.get_zpy_ref() = self.x;
             },
             isa::Instruction::STY_ABS =>
             {
-                self.y = self.get_abs();
-
+                 *self.get_abs_ref() = self.y;
             },
             isa::Instruction::STY_ZP =>
             {
-                self.y = self.get_zp();
+                 *self.get_zp_ref() = self.y;
             },
             isa::Instruction::STY_ZPX =>
             {
-                self.y = self.get_zpx();
+                 *self.get_zpx_ref() = self.y;
             },
             isa::Instruction::TAX_IMP =>
             {
