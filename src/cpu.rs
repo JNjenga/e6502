@@ -178,6 +178,19 @@ impl Cpu
         value
     }
 
+    fn get_indx_ref(&mut self) -> &mut u8 
+    {
+        let mut operand = self.mem[usize::from(self.pc)];
+        operand = operand + self.x;
+
+        let mut address : u16 = u16::from(operand);
+        address = address << 8;
+        address = address | u16::from(operand+1);
+
+        self.pc += 1;
+        &mut self.mem[usize::from(address)]
+    }
+
     fn get_indy(&mut self) -> u8 
     {
         let mut operand = self.mem[usize::from(self.pc)];
@@ -192,10 +205,24 @@ impl Cpu
         value
     }
 
+    fn get_indy_ref(&mut self) -> &mut u8 
+    {
+        let mut operand = self.mem[usize::from(self.pc)];
+        operand = operand + self.y;
+
+        let mut address : u16 = u16::from(operand);
+        address = address << 8;
+        address = address | u16::from(operand+1);
+
+        self.pc += 1;
+        &mut self.mem[usize::from(address)]
+    }
+
     fn get_rel(&mut self) -> u16
     {
         let operand = self.mem[usize::from(self.pc)];
-        let value = self.pc + u16::from(operand);
+        // TODO(James) : Make 0x600 not static value
+        let value = 0x600 + u16::from(operand);
         self.pc += 1;
         value
     }
@@ -233,6 +260,13 @@ impl Cpu
         let value = self.y + self.mem[usize::from(self.pc)];
         self.pc += 1;
         self.mem[usize::from(value)]
+    }
+
+    fn get_zpy_ref(&mut self) -> &mut u8
+    {
+        let value = self.y + self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        &mut self.mem[usize::from(value)]
     }
 
     fn stack_push(&mut self, value : u8)
