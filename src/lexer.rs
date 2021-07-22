@@ -24,6 +24,7 @@ pub enum TokenType
     OPERAND,
     LABEL,
     LABEL_OPERAND,
+    EQUAL,
     REGX,
     REGY,
     REGA,
@@ -662,7 +663,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "AND"
+                    else if t.tstring == "AND"
                     {
                         match mode
                         {
@@ -677,7 +678,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "ASL"
+                    else if t.tstring == "ASL"
                     {
                         match mode
                         {
@@ -690,7 +691,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BCC"
+                    else if t.tstring == "BCC"
                     {
                         match mode
                         {
@@ -698,7 +699,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BCS"
+                    else if t.tstring == "BCS"
                     {
                         match mode
                         {
@@ -706,7 +707,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BEQ"
+                    else if t.tstring == "BEQ"
                     {
                         match mode
                         {
@@ -714,7 +715,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BIT"
+                    else if t.tstring == "BIT"
                     {
                         match mode
                         {
@@ -723,7 +724,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BMI"
+                    else if t.tstring == "BMI"
                     {
                         match mode
                         {
@@ -731,7 +732,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BNE"
+                    else if t.tstring == "BNE"
                     {
                         match mode
                         {
@@ -739,7 +740,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BPL"
+                    else if t.tstring == "BPL"
                     {
                         match mode
                         {
@@ -747,7 +748,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BRK"
+                    else if t.tstring == "BRK"
                     {
                         match mode
                         {
@@ -755,7 +756,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BVC"
+                    else if t.tstring == "BVC"
                     {
                         match mode
                         {
@@ -763,7 +764,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "BVS"
+                    else if t.tstring == "BVS"
                     {
                         match mode
                         {
@@ -771,7 +772,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "CLC"
+                    else if t.tstring == "CLC"
                     {
                         match mode
                         {
@@ -779,7 +780,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "CLD"
+                    else if t.tstring == "CLD"
                     {
                         match mode
                         {
@@ -787,7 +788,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "CLI"
+                    else if t.tstring == "CLI"
                     {
                         match mode
                         {
@@ -795,7 +796,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "CLV"
+                    else if t.tstring == "CLV"
                     {
                         match mode
                         {
@@ -803,7 +804,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "CMP"
+                    else if t.tstring == "CMP"
                     {
                         match mode
                         {
@@ -818,7 +819,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "CPX"
+                    else if t.tstring == "CPX"
                     {
                         match mode
                         {
@@ -828,7 +829,17 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "DEC"
+                    else if t.tstring == "CPY"
+                    {
+                        match mode
+                        {
+                            Mode::IMM => hex_code.push(Instruction::CPY_IMM),
+                            Mode::ZP => hex_code.push(Instruction::CPY_ZP),
+                            Mode::ABS => hex_code.push(Instruction::CPY_ABS),
+                            _ => panic!("Unknown addressing mode"),
+                        }
+                    }
+                    else if t.tstring == "DEC"
                     {
                         match mode
                         {
@@ -839,7 +850,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "DEX"
+                    else if t.tstring == "DEX"
                     {
                         match mode
                         {
@@ -847,7 +858,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "DEY"
+                    else if t.tstring == "DEY"
                     {
                         match mode
                         {
@@ -855,7 +866,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "EOR"
+                    else if t.tstring == "EOR"
                     {
                         match mode
                         {
@@ -870,7 +881,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "INC"
+                    else if t.tstring == "INC"
                     {
                         match mode
                         {
@@ -881,7 +892,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "INX"
+                    else if t.tstring == "INX"
                     {
                         match mode
                         {
@@ -889,7 +900,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "INY"
+                    else if t.tstring == "INY"
                     {
                         match mode
                         {
@@ -897,7 +908,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "JMP"
+                    else if t.tstring == "JMP"
                     {
                         match mode
                         {
@@ -906,7 +917,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "JSR"
+                    else if t.tstring == "JSR"
                     {
                         match mode
                         {
@@ -914,7 +925,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "LDA"
+                    else if t.tstring == "LDA"
                     {
                         match mode
                         {
@@ -929,7 +940,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "LDX"
+                    else if t.tstring == "LDX"
                     {
                         match mode
                         {
@@ -941,7 +952,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "LDY"
+                    else if t.tstring == "LDY"
                     {
                         match mode
                         {
@@ -953,7 +964,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "LSR"
+                    else if t.tstring == "LSR"
                     {
                         match mode
                         {
@@ -965,7 +976,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "NOP"
+                    else if t.tstring == "NOP"
                     {
                         match mode
                         {
@@ -973,7 +984,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "ORA"
+                    else if t.tstring == "ORA"
                     {
                         match mode
                         {
@@ -988,7 +999,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "PHA"
+                    else if t.tstring == "PHA"
                     {
                         match mode
                         {
@@ -996,7 +1007,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "PHP"
+                    else if t.tstring == "PHP"
                     {
                         match mode
                         {
@@ -1004,7 +1015,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "PLA"
+                    else if t.tstring == "PLA"
                     {
                         match mode
                         {
@@ -1012,7 +1023,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "PLP"
+                    else if t.tstring == "PLP"
                     {
                         match mode
                         {
@@ -1020,7 +1031,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "ROL"
+                    else if t.tstring == "ROL"
                     {
                         match mode
                         {
@@ -1032,7 +1043,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "ROR"
+                    else if t.tstring == "ROR"
                     {
                         match mode
                         {
@@ -1044,7 +1055,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "RTI"
+                    else if t.tstring == "RTI"
                     {
                         match mode
                         {
@@ -1052,7 +1063,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "RTS"
+                    else if t.tstring == "RTS"
                     {
                         match mode
                         {
@@ -1060,7 +1071,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "SBC"
+                    else if t.tstring == "SBC"
                     {
                         match mode
                         {
@@ -1075,7 +1086,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "SEC"
+                    else if t.tstring == "SEC"
                     {
                         match mode
                         {
@@ -1083,7 +1094,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "SED"
+                    else if t.tstring == "SED"
                     {
                         match mode
                         {
@@ -1091,7 +1102,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "SEI"
+                    else if t.tstring == "SEI"
                     {
                         match mode
                         {
@@ -1099,7 +1110,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "STA"
+                    else if t.tstring == "STA"
                     {
                         match mode
                         {
@@ -1113,7 +1124,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "STX"
+                    else if t.tstring == "STX"
                     {
                         match mode
                         {
@@ -1123,7 +1134,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "STY"
+                    else if t.tstring == "STY"
                     {
                         match mode
                         {
@@ -1133,7 +1144,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "TAX"
+                    else if t.tstring == "TAX"
                     {
                         match mode
                         {
@@ -1141,7 +1152,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "TAY"
+                    else if t.tstring == "TAY"
                     {
                         match mode
                         {
@@ -1149,7 +1160,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "TSX"
+                    else if t.tstring == "TSX"
                     {
                         match mode
                         {
@@ -1157,7 +1168,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "TXA"
+                    else if t.tstring == "TXA"
                     {
                         match mode
                         {
@@ -1165,7 +1176,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "TXS"
+                    else if t.tstring == "TXS"
                     {
                         match mode
                         {
@@ -1173,7 +1184,7 @@ impl Lexer
                             _ => panic!("Unknown addressing mode"),
                         }
                     }
-                    if t.tstring == "TYA"
+                    else if t.tstring == "TYA"
                     {
                         match mode
                         {
@@ -1193,8 +1204,9 @@ impl Lexer
                                 {
                                     Ok(operand) =>
                                     {
-                                        let hsb:u8 = (operand << 8) as u8;
                                         let lsb:u8 = operand as u8;
+                                        let hsb:u8 =  (operand>>8) as u8;
+                                        // println!("Operand : {} {:#4b} {:#4b} {:#4x}", operand, operand as u8, (operand>>8) as u8, lsb);
                                         hex_code.push(hsb);
                                         hex_code.push(lsb);
                                     },
@@ -1359,6 +1371,24 @@ impl Lexer
                             }
                     }
                 }
+
+                // if c == '='
+                // {
+                //     if unknown_chars_size > 0
+                //     {
+                //         let t = Token { ttype: TT::UNKNOWN, tstring:unknown_chars.iter().collect(), line_no:line_no};
+                //         self.tokens.push(t);
+                //         self.step();
+                //         unknown_chars.clear();
+                //         unknown_chars_size = 0;
+                //     }
+
+                //     let pt = self.previous();
+                //     let t = Token { ttype: TT::EQUAL, tstring:"=".to_string(), line_no:line_no };
+                //     self.tokens.push(t);
+                //     self.step();
+                //     continue;
+                // }
 
                 if c == 'Y' || c == 'y'
                 {
