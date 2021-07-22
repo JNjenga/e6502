@@ -19,5 +19,9 @@ name = "e6502"
 path = "src/main.rs"
 
 [dependencies]
+rand = "*"
 
-
+[dependencies.sdl2]
+version = "*"
+default-features = false
+features = ["image", "ttf"]
