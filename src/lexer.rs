@@ -123,6 +123,12 @@ impl Lexer
 
             if nt.ttype == TT::LABEL_OPERAND
             {
+                let val = u16::from_str_radix(&nt.tstring, 16).unwrap();
+                if val > 255
+                {
+                    return u8::from_str_radix("invalidstring", 16);
+                }
+
                 return u8::from_str_radix(&nt.tstring, 16);
             }
 
