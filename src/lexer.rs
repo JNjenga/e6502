@@ -1533,6 +1533,7 @@ impl Lexer
                 }
 
                 if c == '\r' { continue; }
+                if c == '\t' { continue; }
 
                 if c == '\n'
                 {
