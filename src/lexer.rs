@@ -97,7 +97,6 @@ impl Lexer
     {
         self.current_token += steps;
     }
-
     pub fn get_operand_u8(&self) -> Result<u8, ParseIntError>
     {
         if let Some(nt) = self.next()
@@ -689,7 +688,7 @@ impl Lexer
                         match mode
                         {
                             Mode::ACC => hex_code.push(Instruction::ASL_ACC),
-                            Mode::IMP => {},
+                            Mode::IMP => hex_code.push(Instruction::ASL_ACC),
                             Mode::ZP => hex_code.push(Instruction::ASL_ZP),
                             Mode::ZPX => hex_code.push(Instruction::ASL_ZPX),
                             Mode::ABS => hex_code.push(Instruction::ASL_ABS),
@@ -974,6 +973,7 @@ impl Lexer
                     {
                         match mode
                         {
+                            Mode::IMP => hex_code.push(Instruction::LSR_ACC),
                             Mode::ACC => hex_code.push(Instruction::LSR_ACC),
                             Mode::ZP => hex_code.push(Instruction::LSR_ZP),
                             Mode::ZPX => hex_code.push(Instruction::LSR_ZPX),
@@ -1026,7 +1026,7 @@ impl Lexer
                         match mode
                         {
                             Mode::IMP => hex_code.push(Instruction::PLA_IMP),
-                            _ => panic!("Unknown addressing mode"),
+                            _ => panic!("Unknown addressing mode {} {}", mode, t.line_no),
                         }
                     }
                     else if t.tstring == "PLP"
@@ -1042,6 +1042,7 @@ impl Lexer
                         match mode
                         {
                             Mode::ACC => hex_code.push(Instruction::ROL_ACC),
+                            Mode::IMP => hex_code.push(Instruction::ROL_ACC),
                             Mode::ZP => hex_code.push(Instruction::ROL_ZP),
                             Mode::ZPX => hex_code.push(Instruction::ROL_ZPX),
                             Mode::ABS => hex_code.push(Instruction::ROL_ABS),
@@ -1054,11 +1055,12 @@ impl Lexer
                         match mode
                         {
                             Mode::ACC => hex_code.push(Instruction::ROR_ACC),
+                            Mode::IMP => hex_code.push(Instruction::ROR_ACC),
                             Mode::ZP => hex_code.push(Instruction::ROR_ZP),
                             Mode::ZPX => hex_code.push(Instruction::ROR_ZPX),
                             Mode::ABS => hex_code.push(Instruction::ROR_ABS),
                             Mode::ABSX => hex_code.push(Instruction::ROR_ABSX),
-                            _ => panic!("Unknown addressing mode"),
+                            _ => panic!("Unknown addressing mode {} {}", mode, t.line_no),
                         }
                     }
                     else if t.tstring == "RTI"
