@@ -56,7 +56,7 @@ impl Cpu
         self.sr = 0;
     }
 
-    fn get_abs_value(&mut self) -> u16
+    fn get_abs_address(&mut self) -> u16
     {
         let hsb = self.mem[usize::from(self.pc)];
         let lsb = self.mem[usize::from(self.pc+1)];
@@ -118,7 +118,7 @@ impl Cpu
         &mut self.mem[usize::from(res)]
     }
 
-    fn get_absy(&mut self) -> u8
+    fn get_absx_address(&mut self) -> u16
     {
         let hsb = self.mem[usize::from(self.pc)];
         let lsb = self.mem[usize::from(self.pc+1)];
@@ -128,7 +128,33 @@ impl Cpu
         res = res | u16::from(lsb);
         res = res + u16::from(self.x);
         self.pc += 2;
+        res
+    }
+
+    fn get_absy(&mut self) -> u8
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+        res = res + u16::from(self.y);
+        self.pc += 2;
         self.mem[usize::from(res)]
+    }
+
+    fn get_absy_address(&mut self) -> u16
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+        res = res + u16::from(self.y);
+        self.pc += 2;
+        res
     }
 
     fn get_absy_ref(&mut self) -> &mut u8
@@ -139,7 +165,7 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        res = res + u16::from(self.x);
+        res = res + u16::from(self.y);
         self.pc += 2;
         &mut self.mem[usize::from(res)]
     }
@@ -153,14 +179,20 @@ impl Cpu
 
     fn get_ind(&mut self) -> u16
     {
-        let operand = self.mem[usize::from(self.pc)];
+        let address_hsb = self.mem[usize::from(self.pc)];
+        let address_lsb = self.mem[usize::from(self.pc+1)];
 
-        let lsb = self.mem[usize::from(operand)];
-        let hsb = self.mem[usize::from(operand+1)];
+        let mut address: u16 = address_hsb as u16;
+        address = address << 8;
+        address |= address_lsb as u16;
+
+        let lsb = self.mem[usize::from(address)];
+        let hsb = self.mem[usize::from(address + 1)];
+
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        self.pc += 1;
+        self.pc += 2;
         res
     }
 
@@ -169,13 +201,12 @@ impl Cpu
         let mut operand = self.mem[usize::from(self.pc)];
         operand = operand + self.x;
 
-        let mut address : u16 = u16::from(operand);
+        let mut address : u16 = self.mem[operand as usize] as u16;
         address = address << 8;
-        address = address | u16::from(operand+1);
+        address = address | self.mem[(operand + 1) as usize] as u16;
 
-        let value = self.mem[usize::from(address)];
         self.pc += 1;
-        value
+        self.mem[usize::from(address)]
     }
 
     fn get_indx_ref(&mut self) -> &mut u8 
@@ -183,12 +214,25 @@ impl Cpu
         let mut operand = self.mem[usize::from(self.pc)];
         operand = operand + self.x;
 
-        let mut address : u16 = u16::from(operand);
+        let mut address : u16 = self.mem[operand as usize] as u16;
         address = address << 8;
-        address = address | u16::from(operand+1);
+        address = address | self.mem[(operand + 1) as usize] as u16;
 
         self.pc += 1;
         &mut self.mem[usize::from(address)]
+    }
+
+    fn get_indx_address(&mut self) -> u16
+    {
+        let mut operand = self.mem[usize::from(self.pc)];
+        operand = operand + self.x;
+
+        let mut address : u16 = self.mem[operand as usize] as u16;
+        address = address << 8;
+        address = address | self.mem[(operand + 1) as usize] as u16;
+
+        self.pc += 1;
+        address
     }
 
     fn get_indy(&mut self) -> u8 
@@ -196,13 +240,12 @@ impl Cpu
         let mut operand = self.mem[usize::from(self.pc)];
         operand = operand + self.y;
 
-        let mut address : u16 = u16::from(operand);
+        let mut address : u16 = self.mem[operand as usize] as u16;
         address = address << 8;
-        address = address | u16::from(operand+1);
+        address = address | self.mem[(operand + 1) as usize] as u16;
 
-        let value = self.mem[usize::from(address)];
         self.pc += 1;
-        value
+        self.mem[usize::from(address)]
     }
 
     fn get_indy_ref(&mut self) -> &mut u8 
@@ -210,12 +253,25 @@ impl Cpu
         let mut operand = self.mem[usize::from(self.pc)];
         operand = operand + self.y;
 
-        let mut address : u16 = u16::from(operand);
+        let mut address : u16 = self.mem[operand as usize] as u16;
         address = address << 8;
-        address = address | u16::from(operand+1);
+        address = address | self.mem[(operand + 1) as usize] as u16;
 
         self.pc += 1;
         &mut self.mem[usize::from(address)]
+    }
+
+    fn get_indy_address(&mut self) -> u16
+    {
+        let mut operand = self.mem[usize::from(self.pc)];
+        operand = operand + self.y;
+
+        let mut address : u16 = self.mem[operand as usize] as u16;
+        address = address << 8;
+        address = address | self.mem[(operand + 1) as usize] as u16;
+
+        self.pc += 1;
+        address
     }
 
     fn get_rel(&mut self) -> u16
@@ -229,16 +285,23 @@ impl Cpu
 
     fn get_zp(&mut self) -> u8
     {
-        let value = self.mem[usize::from(self.pc)];
+        let address = self.mem[usize::from(self.pc)];
         self.pc += 1;
-        self.mem[usize::from(value)]
+        self.mem[usize::from(address)]
     }
 
     fn get_zp_ref(&mut self) -> &mut u8
     {
-        let value = self.mem[usize::from(self.pc)];
+        let address = self.mem[usize::from(self.pc)];
         self.pc += 1;
-        &mut self.mem[usize::from(value)]
+        &mut self.mem[usize::from(address)]
+    }
+
+    fn get_zp_address(&mut self) -> u16
+    {
+        let address = self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        u16::from(address)
     }
 
     fn get_zpx(&mut self) -> u8
@@ -255,6 +318,13 @@ impl Cpu
         &mut self.mem[usize::from(value)]
     }
 
+    fn get_zpx_address(&mut self) -> u16
+    {
+        let address = self.x + self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        u16::from(address)
+    }
+
     fn get_zpy(&mut self) -> u8
     {
         let value = self.y + self.mem[usize::from(self.pc)];
@@ -269,6 +339,13 @@ impl Cpu
         &mut self.mem[usize::from(value)]
     }
 
+    fn get_zpy_address(&mut self) -> u16
+    {
+        let address = self.y + self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        u16::from(address)
+    }
+
     fn stack_push(&mut self, value : u8)
     {
         self.mem[usize::from(0x100 + u16::from(self.sp))] = value;
@@ -277,7 +354,7 @@ impl Cpu
 
     fn stack_push_16(&mut self, value : u16)
     {
-        self.mem[usize::from(0x100 + u16::from(self.sp))] = value as u8;
+        self.mem[usize::from(0x100 + u16::from(self.sp))] = (value >> 8 ) as u8;
         self.sp = self.sp.wrapping_sub(1);
         self.mem[usize::from(0x100 + u16::from(self.sp))]  = ((value << 8) >> 8) as u8;
         self.sp = self.sp.wrapping_sub(1);
@@ -335,8 +412,8 @@ impl Cpu
 
     fn set_vflag(&mut self, prev_value:u8, value:u8)
     {
-        if prev_value != (value & 0b10000000) &&
-            (value & 0b10000000) == 0b10000000
+        if prev_value &  0b01000000 == 0b01000000
+            && value & 0b10000000 == 0b10000000
             {
                 self.sr |= Cpu::OverFlowFlag;
             }
@@ -367,225 +444,43 @@ impl Cpu
             {
                 let operand = self.get_imm();
 
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::ADC_ABS =>
             {
                 let operand = self.get_abs();
 
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::ADC_ABSX =>
             {
                 let operand = self.get_absx();
-
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::ADC_ABSY =>
             {
                 let operand = self.get_absy();
-
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::ADC_INDX =>
             {
                 let operand = self.get_indx();
-
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::ADC_INDY =>
             {
                 let operand = self.get_indy();
-
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::ADC_ZP =>
             {
                 let operand = self.get_zp();
-
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::ADC_ZPX =>
             {
                 let operand = self.get_zpx();
-
-                // Previous a
-                let prev_a = self.a & 0b10000000;
-                let option = self.a.checked_add(operand);
-
-                match option
-                {
-                    None => 
-                    {
-                        self.a = 0;
-                        self.sr |= Cpu::CarryFlag;
-                        self.set_zerof(self.a, true);
-                    },
-                    Some(value) =>
-                    {
-                        self.a = value;
-                        self.set_zerof(self.a, true);
-                        self.set_negf(self.a, false);
-                        self.sr &= !Cpu::CarryFlag;
-
-                        // Set overflow flag
-                        self.set_vflag(prev_a, self.a);
-                    }
-                }
+                self.adc(operand);
             },
             isa::Instruction::AND_ABS =>
             {
@@ -629,76 +524,47 @@ impl Cpu
             },
             isa::Instruction::ASL_ACC =>
             {
-                let hsb = self.a >> 7;
-                let prev_carry = self.sr & Cpu::CarryFlag;
+                let prev_a = self.a;
+                self.a = self.a << 1;
 
-                self.a <<= 1;
-                self.a |= prev_carry;
+                if (prev_a >> 7) == 0 || prev_a == 0
+                {
+                    self.sr &= !Cpu::CarryFlag;
+                }
+                else
+                {
+                    self.sr |= Cpu::CarryFlag;
+                }
 
-                self.sr &= hsb;
                 self.set_zerof(self.a, true);
                 self.set_negf(self.a, true);
             },
             isa::Instruction::ASL_ABS =>
             {
-                let prev_carry = self.sr & Cpu::CarryFlag;
+                let value = self.get_abs_address();
 
-                let operand = self.get_abs_ref();
-                let hsb = *operand >> 7;
+                self.mem[value as usize] = self.asl(self.mem[value as usize]);
 
-                *operand <<= 1;
-                *operand |= prev_carry;
-
-                let res = *operand;
-                self.sr &= hsb;
-                self.set_zerof(res, true);
-                self.set_negf(res, true);
             },
             isa::Instruction::ASL_ABSX =>
             {
-                let prev_carry = self.sr & Cpu::CarryFlag;
+                let value = self.get_absx_address() as usize;
 
-                let operand = self.get_absx_ref();
-                let hsb = *operand >> 7;
-
-                *operand <<= 1;
-                *operand |= prev_carry;
-
-                let res = *operand;
-                self.sr &= hsb;
-                self.set_zerof(res, true);
-                self.set_negf(res, true);
+                self.mem[value] = self.asl(self.mem[value]);
             },
             isa::Instruction::ASL_ZP =>
             {
-                let prev_carry = self.sr & Cpu::CarryFlag;
+                let value = self.get_zp_address() as usize;
 
-                let operand = self.get_zp_ref();
-                let hsb = *operand >> 7;
-
-                *operand <<= 1;
-                *operand |= prev_carry;
-
-                let res = *operand;
-                self.sr &= hsb;
-                self.set_zerof(res, true);
-                self.set_negf(res, true);
+                self.mem[value] = self.asl(self.mem[value]);
             },
             isa::Instruction::ASL_ZPX =>
             {
-                let prev_carry = self.sr & Cpu::CarryFlag;
 
-                let operand = self.get_zpx_ref();
-                let hsb = *operand >> 7;
+                let value = self.get_zpx_address() as usize;
 
-                *operand <<= 1;
-                *operand |= prev_carry;
-
-                let res = *operand;
-                self.sr &= hsb;
-                self.set_zerof(res, true);
-                self.set_negf(res, true);
-            },
+                self.mem[value] = self.asl(self.mem[value]);
+           },
             isa::Instruction::BCC_REL =>
             {
                 let carry_flag = self.sr & Cpu::CarryFlag;
@@ -813,7 +679,7 @@ impl Cpu
             isa::Instruction::BRK_IMP =>
             {
                 self.sr |= Cpu::BreakFlag;
-                self.pc += 2;
+                self.pc += 1;
 
             },
             isa::Instruction::BVC_REL =>
@@ -858,14 +724,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CMP_ABSX =>
@@ -875,14 +747,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CMP_ABSY =>
@@ -892,14 +770,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CMP_IMM =>
@@ -909,14 +793,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CMP_INDX =>
@@ -926,14 +816,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CMP_INDY =>
@@ -943,14 +839,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CMP_ZP =>
@@ -960,14 +862,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CMP_ZPX =>
@@ -977,14 +885,20 @@ impl Cpu
                 if self.a < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.a == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.a >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CPX_ABS =>
@@ -994,14 +908,20 @@ impl Cpu
                 if self.x < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.x == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
                 }
                 else if self.x >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CPX_IMM =>
@@ -1011,14 +931,20 @@ impl Cpu
                 if self.x < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.x == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
                 else if self.x >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CPX_ZP =>
@@ -1028,14 +954,20 @@ impl Cpu
                 if self.x < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.x == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
                 else if self.x >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CPY_ABS =>
@@ -1045,14 +977,20 @@ impl Cpu
                 if self.y < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.y == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
                 else if self.y >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CPY_IMM =>
@@ -1062,14 +1000,20 @@ impl Cpu
                 if self.y < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.y == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
                 else if self.y >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::CPY_ZP =>
@@ -1079,14 +1023,20 @@ impl Cpu
                 if self.y < operand
                 {
                     self.sr |= Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
+                    self.sr &= !Cpu::CarryFlag;
                 }
                 else if self.y == operand
                 {
                     self.sr |= Cpu::ZeroFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr |= Cpu::CarryFlag;
                 }
                 else if self.y >= operand
                 {
                     self.sr |= Cpu::CarryFlag;
+                    self.sr &= !Cpu::NegFlag;
+                    self.sr &= !Cpu::ZeroFlag;
                 }
             },
             isa::Instruction::DEC_ABS =>
@@ -1356,19 +1306,8 @@ impl Cpu
 
                 let result = *operand;
 
-                if result >> 7 == 1
-                {
-                    self.sr |= Cpu::NegFlag;
-                }
-
-                if result == 0
-                {
-                    self.sr |= Cpu::ZeroFlag;
-                }
-                else
-                {
-                    self.sr &= !Cpu::ZeroFlag;
-                }
+                self.set_zerof(result, false);
+                self.set_negf(result, true);
             },
             isa::Instruction::INC_ABSX =>
             {
@@ -1377,19 +1316,9 @@ impl Cpu
                 *operand = operand.wrapping_add(1);
                 let result = *operand;
 
-                if result >> 7 == 1
-                {
-                    self.sr |= Cpu::NegFlag;
-                }
 
-                if result == 0
-                {
-                    self.sr |= Cpu::ZeroFlag;
-                }
-                else
-                {
-                    self.sr &= !Cpu::ZeroFlag;
-                }
+                self.set_zerof(result, false);
+                self.set_negf(result, true);
             },
             isa::Instruction::INC_ZP =>
             {
@@ -1399,19 +1328,9 @@ impl Cpu
 
                 let result = *operand;
 
-                if result >> 7 == 1
-                {
-                    self.sr |= Cpu::NegFlag;
-                }
 
-                if result == 0
-                {
-                    self.sr |= Cpu::ZeroFlag;
-                }
-                else
-                {
-                    self.sr &= !Cpu::ZeroFlag;
-                }
+                self.set_zerof(result, false);
+                self.set_negf(result, true);
             },
             isa::Instruction::INC_ZPX =>
             {
@@ -1421,73 +1340,49 @@ impl Cpu
 
                 let result = *operand;
 
-                if result >> 7 == 1
-                {
-                    self.sr |= Cpu::NegFlag;
-                }
+                self.set_zerof(result, false);
+                self.set_negf(result, true);
 
-                if result == 0
-                {
-                    self.sr |= Cpu::ZeroFlag;
-                }
-                else
-                {
-                    self.sr &= !Cpu::ZeroFlag;
-                }
             },
             isa::Instruction::INX_IMP =>
             {
                 self.x = self.x.wrapping_add(1);
 
-                if self.x >> 7 == 1
-                {
-                    self.sr |= Cpu::NegFlag;
-                }
+                self.set_zerof(self.x, false);
+                self.set_negf(self.x, true);
 
-                if self.x == 0
-                {
-                    self.sr |= Cpu::ZeroFlag;
-                }
-                else
-                {
-                    self.sr &= !Cpu::ZeroFlag;
-                }
             },
             isa::Instruction::INY_IMP =>
             {
                 self.y = self.y.wrapping_add(1);
 
-                if self.y >> 7 == 1
-                {
-                    self.sr |= Cpu::NegFlag;
-                }
+                self.set_zerof(self.y, false);
+                self.set_negf(self.y, true);
 
-                if self.y == 0
-                {
-                    self.sr |= Cpu::ZeroFlag;
-                }
-                else
-                {
-                    self.sr &= !Cpu::ZeroFlag;
-                }
             },
             isa::Instruction::JMP_ABS =>
             {
-                let operand = self.get_abs_value();
-
+                let operand = self.get_abs_address();
                 self.pc = 0x600 + operand;
             },
             isa::Instruction::JMP_IND =>
             {
                 let operand = self.get_ind();
-
                 self.pc = 0x600 + operand;
             },
             isa::Instruction::JSR_ABS =>
             {
-                let operand = self.get_abs_value();
+                let operand = self.get_abs_address();
 
+                println!("Before push");
+                println!("{:#4x}", self.mem[0x1ff]);
+                println!("{:#4x}", self.mem[0x1fe]);
+                println!("{:#4x}", self.mem[0x1fd]);
                 self.stack_push_16(self.pc);
+                println!("After push");
+                println!("{:#4x}", self.mem[0x1ff]);
+                println!("{:#4x}", self.mem[0x1fe]);
+                println!("{:#4x}", self.mem[0x1fd]);
                 self.pc = 0x600 + operand;
             },
             isa::Instruction::LDA_ABS =>
@@ -1654,9 +1549,12 @@ impl Cpu
             },
             isa::Instruction::LSR_ACC =>
             {
-                let lsb = self.a >> 7;
+                let prev_a = self.a;
+                self.a = self.a >> 1;
 
-                if lsb == 0
+                self.sr &= !Cpu::NegFlag;
+
+                if (prev_a << 7 ) >> 7 == 0
                 {
                     self.sr &= !Cpu::CarryFlag;
                 }
@@ -1664,13 +1562,7 @@ impl Cpu
                 {
                     self.sr |= Cpu::CarryFlag;
                 }
-
-                self.a >>= 1;
-
-                if self.a == 0
-                {
-                    self.sr &= !Cpu::ZeroFlag;
-                }
+                self.set_zerof(self.a, true);
             },
             isa::Instruction::LSR_ABS =>
             {
@@ -1762,6 +1654,7 @@ impl Cpu
             },
             isa::Instruction::NOP_IMP =>
             {
+                self.pc += 1;
             },
             isa::Instruction::ORA_ABS =>
             {
@@ -2094,7 +1987,7 @@ impl Cpu
             isa::Instruction::RTS_IMP =>
             {
                 self.pc = self.stack_pop_16();
-                self.pc -= 1;
+                // self.pc -= 1;
             },
             isa::Instruction::SBC_ABS =>
             {
@@ -2326,55 +2219,82 @@ impl Cpu
             },
             isa::Instruction::STA_ABS =>
             {
-                 *self.get_abs_ref() = self.a;
+                 // *self.get_abs_ref() = self.a;
+                let val = self.a;
+                let operand = self.get_abs_ref();
+                *operand = val;
             },
             isa::Instruction::STA_ABSX =>
             {
-                 *self.get_absx_ref() = self.a;
+                let val = self.a;
+                let operand = self.get_absx_ref();
+                *operand = val;
             },
             isa::Instruction::STA_ABSY =>
             {
-                 *self.get_absy_ref() = self.a;
+                let val = self.a;
+                let operand = self.get_absy_ref();
+                *operand = val;
             },
             isa::Instruction::STA_INDX =>
             {
-                 *self.get_indx_ref() = self.a;
+                let val = self.a;
+                let operand = self.get_indx_ref();
+                *operand = val;
             },
             isa::Instruction::STA_INDY =>
             {
-                 *self.get_indy_ref() = self.a;
+                let val = self.a;
+                let operand = self.get_indy_ref();
+                *operand = val;
             },
             isa::Instruction::STA_ZP =>
             {
-                 *self.get_zp_ref() = self.a;
+                let val = self.a;
+                let operand = self.get_zp_ref();
+                *operand = val;
             },
             isa::Instruction::STA_ZPX =>
             {
-                 *self.get_zpx_ref() = self.a;
+                let val = self.a;
+                let operand = self.get_zpx_ref();
+                *operand = val;
             },
             isa::Instruction::STX_ABS =>
             {
-                 *self.get_abs_ref() = self.x;
+                let val = self.x;
+                let operand = self.get_zpx_ref();
+                *operand = val;
             },
             isa::Instruction::STX_ZP =>
             {
-                 *self.get_zp_ref() = self.x;
+                let val = self.x;
+                let operand = self.get_zp_ref();
+                *operand = val;
             },
             isa::Instruction::STX_ZPY =>
             {
-                 *self.get_zpy_ref() = self.x;
+                let val = self.x;
+                let operand = self.get_zpy_ref();
+                *operand = val;
             },
             isa::Instruction::STY_ABS =>
             {
-                 *self.get_abs_ref() = self.y;
+                let val = self.y;
+                let operand = self.get_abs_ref();
+                *operand = val;
             },
             isa::Instruction::STY_ZP =>
             {
-                 *self.get_zp_ref() = self.y;
+                let val = self.y;
+                let operand = self.get_zp_ref();
+                *operand = val;
             },
             isa::Instruction::STY_ZPX =>
             {
-                 *self.get_zpx_ref() = self.y;
+                let val = self.y;
+                let operand = self.get_zpx_ref();
+                *operand = val;
             },
             isa::Instruction::TAX_IMP =>
             {
@@ -2415,9 +2335,59 @@ impl Cpu
                 self.set_zerof(self.a, true);
                 self.set_negf(self.a, true);
             },
-            _ => { panic!("Opcode {} at pc {:#4x} not supported", opcode, self.pc) }
+            _ => { panic!("Opcode {:#4x} at pc {:#4x} not supported", opcode, self.pc - 1) }
 
         }
+    }
+
+    #[inline(always)]
+    fn adc(&mut self, operand : u8)
+    {
+        let prev_a = self.a;
+        let option = self.a.checked_add(operand);
+
+        match option
+        {
+            None => 
+            {
+                self.a = 0;
+                self.sr |= Cpu::CarryFlag;
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, false);
+                self.set_vflag(prev_a, self.a);
+            },
+            Some(value) =>
+            {
+                self.a = value;
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, false);
+                self.sr &= !Cpu::CarryFlag;
+
+                // Set overflow flag
+                self.set_vflag(prev_a, self.a);
+            }
+        }
+    }
+
+    fn asl(&mut self, operand : u8) -> u8
+    {
+        let mut res = operand;
+        let prev_val = operand;
+        res = prev_val << 1;
+
+        if prev_val & 0b10000000 == 0b10000000
+        {
+            self.sr |= Cpu::CarryFlag;
+        }
+        else
+        {
+            self.sr &= !Cpu::CarryFlag;
+        }
+
+        self.set_zerof(res, true);
+        self.set_negf(res, true);
+
+        res 
     }
 
     pub fn step(&mut self)
@@ -2432,10 +2402,10 @@ impl Cpu
     {
         println!("Reg\tValue");
 
-        println!("A\t{:02x}", self.a);
-        println!("X\t{:02x}", self.x);
-        println!("Y\t{:02x}", self.y);
-        println!("SP\t{:02x}", self.sp);
+        println!("A\t{:04x}", self.a);
+        println!("X\t{:04x}", self.x);
+        println!("Y\t{:04x}", self.y);
+        println!("SP\t{:04x}", self.sp);
         println!("PC\t{:04x}", self.pc);
         println!("ST\t{:08b}\n-------", self.sr);
     }
