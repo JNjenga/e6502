@@ -1,7 +1,5 @@
 # e6502 
-
-6502 CPU emulator that uses the ~~terminal~~ as user interface.
-Developed for recreational and learing purposes.
+**e6502** is an emulator that emulates the [6502 processor](https://en.wikipedia.org/wiki/MOS_Technology_6502). While it's being developed for recreational , it could be used as a teaching tool.
 
 > The project is still being developed, might want to comeback after some time.
 
@@ -13,15 +11,44 @@ This is what I am working towards:
  
 ## Features
 
-- 40x25 screen display
+- 32x32 screen display
 - Step through code
 - Registers and memory editing and viewing
   
 ## Tech Stack
 
 - [Rust](https://www.rust-lang.org/)
-- [Ncurses](https://invisible-island.net/ncurses/) for Terminal User Interface (TUI)
-  
+- [Rust-SDL2](https://github.com/Rust-SDL2/rust-sdl2)
+
+## Installation
+
+The program has two binaries, a "compiler" called **e6502c** and the emulator called **e6502**
+
+To build the compiler
+
+```
+cargo build --bin e6502c
+```
+
+To build the emulator 
+
+```
+cargo build --bin e6502
+```
+
+## Running
+The compiler expects two cli arguments `source_code_path` and `binary_output`
+
+```
+e6502c tests/asmcode.asm out.bin
+```
+
+The emulator expects one cli argument, `binary_program_path`
+
+```
+e6502 out.bin
+```
+
 ## Resources
 
  - [6502.org](6502.org/tutorials/6502opcodes.html)
