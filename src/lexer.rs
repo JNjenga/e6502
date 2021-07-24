@@ -7,6 +7,7 @@ use std::num::ParseIntError;
 #[allow(dead_code)]
 #[derive(PartialEq,Eq)]
 #[derive(Debug)]
+#[allow(non_camel_case_types)]
 pub enum TokenType
 {
     WHITE,
@@ -645,7 +646,7 @@ impl Lexer
         // Second pass : Create the instructions vector
         loop 
         {
-            let mut t = self.current();
+            let t = self.current();
 
             if let Some(t) = t
             {
@@ -1252,7 +1253,7 @@ impl Lexer
                                     {
                                         hex_code.push(operand);
                                     },
-                                    Err(e) =>
+                                    Err(_e) =>
                                     {
                                         // TODO: This should do error matching for
                                         // IntErrorKind::PosOverflow to see if it might be a u16

@@ -4,8 +4,6 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use std::convert::TryInto;
-use std::time::Duration;
 
 mod isa;
 mod lexer;
@@ -16,8 +14,6 @@ mod cpu;
 // use std::fs;
 use std::env;
 use std::fs;
-use std::fs::OpenOptions;
-use std::io::Write;
 use rand::Rng;
 
 fn get_pixel_color(value : u8) -> Color
@@ -64,7 +60,7 @@ fn main() -> Result<(), String>
         y: 0,
         sp: 0xff,
         pc: 0x600,
-        sr: 0,
+        sr: 0b00110000,
         mem: [0;1<<16],
     };
 
@@ -95,13 +91,14 @@ fn main() -> Result<(), String>
     canvas.clear();
     let mut event_pump = sdl_context.event_pump()?;
 
-    let pc_max = data.len() as u16 + 0x600 + 0x12;
+    let pc_max = data.len() as u16 + 0x600 + 0x01;
     let mut rng = rand::thread_rng();
 
     'running: loop {
         if cpu.pc < pc_max
         {
             cpu.mem[0xfe] = rng.gen();
+
             cpu.step();
             // cpu.print_regs();
 
@@ -113,7 +110,7 @@ fn main() -> Result<(), String>
                 {
                     let color = get_pixel_color(cpu.mem[0x200 + (32 * row + col)]);
                     canvas.set_draw_color(color);
-                    canvas.fill_rect(Rect::new(col as i32 * 20_i32, row as i32 * 20_i32, 20, 20));
+                    canvas.fill_rect(Rect::new(col as i32 * 20_i32, row as i32 * 20_i32, 20, 20))?;
                 }
             }
 
@@ -131,8 +128,7 @@ fn main() -> Result<(), String>
             }
         }
 
-        // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 3));
-        // The rest of the game loop goes here...
+        // ::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 3));
     }
 
     Ok(())
