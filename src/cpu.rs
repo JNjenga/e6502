@@ -100,7 +100,28 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        res = res + u16::from(self.x);
+        // Add with carry
+        let x = self.x;
+        let option = res.checked_add(u16::from(x));
+
+        match option
+        {
+            None => 
+            {
+                res = res.wrapping_add(u16::from(x));
+                self.sr |= Cpu::CarryFlag;
+            },
+            Some(value) =>
+            {
+                res = value;
+                self.sr &= !Cpu::CarryFlag;
+            }
+        }
+        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            res += 1;
+        }
+
         self.pc += 2;
         self.mem[usize::from(res)]
     }
@@ -113,7 +134,28 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        res = res + u16::from(self.x);
+        // Add with carry
+        let x = self.x;
+        let option = res.checked_add(u16::from(x));
+
+        match option
+        {
+            None => 
+            {
+                res = res.wrapping_add(u16::from(x));
+                self.sr |= Cpu::CarryFlag;
+            },
+            Some(value) =>
+            {
+                res = value;
+                self.sr &= !Cpu::CarryFlag;
+            }
+        }
+        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            res += 1;
+        }
+
         self.pc += 2;
         &mut self.mem[usize::from(res)]
     }
@@ -126,7 +168,29 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        res = res + u16::from(self.x);
+        // Add with carry
+        let x = self.x;
+        let option = res.checked_add(u16::from(x));
+
+        match option
+        {
+            None => 
+            {
+                res = res.wrapping_add(u16::from(x));
+                self.sr |= Cpu::CarryFlag;
+            },
+            Some(value) =>
+            {
+                res = value;
+                self.sr &= !Cpu::CarryFlag;
+            }
+        }
+        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            res += 1;
+        }
+
+
         self.pc += 2;
         res
     }
@@ -139,7 +203,27 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        res = res + u16::from(self.y);
+        let y = self.y;
+        let option = res.checked_add(u16::from(y));
+
+        match option
+        {
+            None => 
+            {
+                res = res.wrapping_add(u16::from(y));
+                self.sr |= Cpu::CarryFlag;
+            },
+            Some(value) =>
+            {
+                res = value;
+                self.sr &= !Cpu::CarryFlag;
+            }
+        }
+        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            res += 1;
+        }
+
         self.pc += 2;
         self.mem[usize::from(res)]
     }
@@ -152,7 +236,27 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        res = res + u16::from(self.y);
+        let y = self.y;
+        let option = res.checked_add(u16::from(y));
+
+        match option
+        {
+            None => 
+            {
+                res = res.wrapping_add(u16::from(y));
+                self.sr |= Cpu::CarryFlag;
+            },
+            Some(value) =>
+            {
+                res = value;
+                self.sr &= !Cpu::CarryFlag;
+            }
+        }
+        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            res += 1;
+        }
+
         self.pc += 2;
         res
     }
@@ -165,7 +269,27 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        res = res + u16::from(self.y);
+        let y = self.y;
+        let option = res.checked_add(u16::from(y));
+
+        match option
+        {
+            None => 
+            {
+                res = res.wrapping_add(u16::from(y));
+                self.sr |= Cpu::CarryFlag;
+            },
+            Some(value) =>
+            {
+                res = value;
+                self.sr &= !Cpu::CarryFlag;
+            }
+        }
+        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            res += 1;
+        }
+
         self.pc += 2;
         &mut self.mem[usize::from(res)]
     }
@@ -199,10 +323,10 @@ impl Cpu
     fn get_indx(&mut self) -> u8 
     {
         let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand)] as u16;
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
         address <<= 8;
-        address |= self.mem[usize::from(operand + 1)] as u16;
-        address += self.x as u16;
+        address |= self.mem[usize::from(operand)] as u16;
+       address += self.x as u16;
 
         self.pc += 1;
         self.mem[usize::from(address)]
@@ -211,9 +335,9 @@ impl Cpu
     fn get_indx_ref(&mut self) -> &mut u8 
     {
         let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand)] as u16;
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
         address <<= 8;
-        address |= self.mem[usize::from(operand + 1)] as u16;
+        address |= self.mem[usize::from(operand)] as u16;
         address += self.x as u16;
 
         self.pc += 1;
@@ -223,9 +347,9 @@ impl Cpu
     fn get_indx_address(&mut self) -> u16
     {
         let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand)] as u16;
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
         address <<= 8;
-        address |= self.mem[usize::from(operand + 1)] as u16;
+        address |= self.mem[usize::from(operand)] as u16;
         address += self.x as u16;
 
         self.pc += 1;
@@ -235,9 +359,9 @@ impl Cpu
     fn get_indy(&mut self) -> u8 
     {
         let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand)] as u16;
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
         address <<= 8;
-        address |= self.mem[usize::from(operand + 1)] as u16;
+        address |= self.mem[usize::from(operand)] as u16;
         address += self.y as u16;
 
         self.pc += 1;
@@ -247,15 +371,11 @@ impl Cpu
     fn get_indy_ref(&mut self) -> &mut u8 
     { 
         let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand)] as u16;
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
         address <<= 8;
-        address |= self.mem[usize::from(operand + 1)] as u16;
+        address |= self.mem[usize::from(operand)] as u16;
         address += self.y as u16;
 
-        if address >= 0x600 && address <= 0x609
-        {
-            self.print_regs();
-        }
         self.pc += 1;
         &mut self.mem[usize::from(address)]
     }
@@ -263,9 +383,9 @@ impl Cpu
     fn get_indy_address(&mut self) -> u16
     {
         let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand)] as u16;
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
         address <<= 8;
-        address |= self.mem[usize::from(operand + 1)] as u16;
+        address |= self.mem[usize::from(operand)] as u16;
         address += self.y as u16;
 
         self.pc += 1;
@@ -484,6 +604,9 @@ impl Cpu
             {
                 let operand = self.get_abs();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::AND_ABSX =>
             {
@@ -499,6 +622,9 @@ impl Cpu
             {
                 let operand = self.get_imm();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::AND_INDX =>
             {
@@ -836,7 +962,7 @@ impl Cpu
             {
                 self.x = self.x.wrapping_add(1);
 
-                self.set_zerof(self.x, false);
+                self.set_zerof(self.x, true);
                 self.set_negf(self.x, true);
 
             },
@@ -846,16 +972,11 @@ impl Cpu
 
                 self.set_zerof(self.y, false);
                 self.set_negf(self.y, true);
-
             },
             isa::Instruction::JMP_ABS =>
             {
                 let operand = self.get_abs_address();
                 self.pc = 0x600 + operand;
-                // for i in 0..22
-                // {
-                //     print!("{:#4x} ", self.mem[(0x600 + i) as usize]);
-                // }
             },
             isa::Instruction::JMP_IND =>
             {
@@ -1206,7 +1327,7 @@ impl Cpu
             isa::Instruction::RTS_IMP =>
             {
                 let operand = self.stack_pop_16();
-                self.pc = 0x600 + operand;
+                self.pc = operand + 1;
             },
             isa::Instruction::SBC_ABS =>
             {
@@ -1269,9 +1390,12 @@ impl Cpu
             },
             isa::Instruction::STA_ABSX =>
             {
-                let val = self.a;
-                let operand = self.get_absx_ref();
-                *operand = val;
+                let address = self.get_absx_address() as usize;
+                self.mem[address] = self.a;
+                // println!("STA_ABSX: Storing {:#4x} to {:#4x}", self.a, address);
+                // let val = self.a;
+                // let operand = self.get_absx_ref();
+                // *operand = val;
             },
             isa::Instruction::STA_ABSY =>
             {
@@ -1281,27 +1405,24 @@ impl Cpu
             },
             isa::Instruction::STA_INDX =>
             {
-                let val = self.a;
-                let operand = self.get_indx_ref();
-                *operand = val;
+                let address = self.get_indx_address() as usize;
+                self.mem[address] = self.a;
             },
             isa::Instruction::STA_INDY =>
             {
-                let val = self.a;
-                let operand = self.get_indy_ref();
-                *operand = val;
+                let address = self.get_indy_address() as usize;
+                self.mem[address] = self.a;
             },
             isa::Instruction::STA_ZP =>
             {
-                let val = self.a;
-                let operand = self.get_zp_ref();
-                *operand = val;
+                let address = self.get_zp_address() as usize;
+                self.mem[address] = self.a;
+                // println!("STA_ZP: Storing {:#4x} to {:#4x}", self.a, address);
             },
             isa::Instruction::STA_ZPX =>
             {
-                let val = self.a;
-                let operand = self.get_zpx_ref();
-                *operand = val;
+                let address = self.get_zpy_address() as usize;
+                self.mem[address] = self.a;
             },
             isa::Instruction::STX_ABS =>
             {
@@ -1586,7 +1707,7 @@ impl Cpu
                 self.a = value;
                 if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
                 {
-                    self.a.wrapping_sub(1);
+                    self.a = self.a.wrapping_sub(1);
                 }
 
                 self.sr &= !Cpu::CarryFlag;
@@ -1606,15 +1727,33 @@ impl Cpu
         self.execute_instruction(opcode);
     }
 
+    #[inline(always)]
     pub fn print_regs(&self)
     {
         println!("Reg\tValue");
 
-        println!("A\t{:04x}", self.a);
-        println!("X\t{:04x}", self.x);
-        println!("Y\t{:04x}", self.y);
-        println!("SP\t{:04x}", self.sp);
-        println!("PC\t{:04x}", self.pc);
+        println!("A\t{:#4x}\t{:#8b}", self.a, self.a);
+        println!("X\t{:#4x}\t{:#8b}", self.x, self.x);
+        println!("Y\t{:#4x}\t{:#8b}", self.y, self.x);
+        println!("SP\t{:#4x}\t{:#8b}", self.sp, self.sp);
+        println!("PC\t{:#4x}", self.pc);
         println!("ST\t{:08b}\n-------", self.sr);
+    }
+
+    #[inline(always)]
+    pub fn print_mem(&self, from:usize, to:usize)
+    {
+        let mut count = 0;
+        print!("200: ");
+        for i in from..to
+        {
+            print!("{:02x} ", self.mem[i]);
+            if count == 15
+            {
+                print!("\n{:04x}: ", i);
+                count = 0;
+            }
+            count += 1;
+        }
     }
 }
