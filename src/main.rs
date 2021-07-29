@@ -16,9 +16,10 @@ use std::env;
 use std::fs;
 use rand::Rng;
 
+#[inline(always)]
 fn get_pixel_color(value : u8) -> Color
 {
-    match value
+    match value & 0b00001111
     {
 
         0 => { return Color::RGB(0, 0, 0); },       // Black
