@@ -136,7 +136,6 @@ impl Lexer
         }
 
         return u8::from_str_radix("raise err", 10);
-
     }
 
     pub fn get_operand_u16(&self) -> Result<u16, ParseIntError>
@@ -458,7 +457,7 @@ impl Lexer
 
     pub fn parse(&mut self) -> Vec<u8>
     {
-        let mut instruction_strings = vec!["ADC", "AND", "ASL", "BCC", "BCS", "BEQ", "BIT", "BMI", "BNE", "BPL", "BRK", "BVC","BVS", "CLC", "CLD", "CLI", "CLV", "CMP", "CPX", "CPY", "DEC", "DEX", "DEY", "EOR", "INC", "INX", "INY", "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "NOP", "ORA", "PHA", "PHP", "PLA", "PLP", "ROL", "ROR", "RTI", "RTS", "SBC", "SEC", "SED", "SEI", "STA", "STX", "STY", "TAX", "TAY", "TSX", "TXA", "TXS", "TYA","adc","and","asl","bcc","bcs","beq","bit","bmi","bne","bpl","brk","bvc","bvs","clc","cld","cli","clv","cmp","cpx","cpy","dec","dex","dey","eor","inc","inx","iny","jmp","jsr","lda","ldx","ldy","lsr","nop","ora","pha","php","pla","plp","rol","ror","rti","rts","sbc","sec","sed","sei","sta","stx","sty","tax","tay","tsx","txa","txs","tya"];
+        let mut instruction_strings = vec!["ADC", "AND", "ASL", "BCC", "BCS", "BEQ", "BIT", "BMI", "BNE", "BPL", "BRK", "BVC","BVS", "CLC", "CLD", "CLI", "CLV", "CMP", "CPX", "CPY","DCB", "DEC", "DEX", "DEY", "EOR", "INC", "INX", "INY", "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "NOP", "ORA", "PHA", "PHP", "PLA", "PLP", "ROL", "ROR", "RTI", "RTS", "SBC", "SEC", "SED", "SEI", "STA", "STX", "STY", "TAX", "TAY", "TSX", "TXA", "TXS", "TYA","adc","and","asl","bcc","bcs","beq","bit","bmi","bne","bpl","brk","bvc","bvs","clc","cld","cli","clv","cmp","cpx","cpy","dcb", "dec","dex","dey","eor","inc","inx","iny","jmp","jsr","lda","ldx","ldy","lsr","nop","ora","pha","php","pla","plp","rol","ror","rti","rts","sbc","sec","sed","sei","sta","stx","sty","tax","tay","tsx","txa","txs","tya"];
         instruction_strings.sort_unstable();
 
         // First pass : Update unknown tokens and read labels
@@ -546,7 +545,10 @@ impl Lexer
                         Mode::ZPY => mem_index += 1,
                         _ =>
                         {
+                            if t.tstring != "DCB"
+                            {
                             panic!("Unknown addressing mode")
+                            }
                         },
                     }
                     self.step();
@@ -844,6 +846,52 @@ impl Lexer
                             Mode::ABS => hex_code.push(Instruction::CPY_ABS),
                             _ => panic!("Unknown addressing mode"),
                         }
+                    }
+                    else if t.tstring == "DCB"
+                    {
+                        while let Some(nt) = self.next()
+                        {
+                            if nt.ttype == TT::COMMA
+                            {
+                                self.step();
+                                continue;
+                            }
+                            else if nt.ttype == TT::NUMBER
+                                || nt.ttype == TT::DOLLAR
+                                || nt.ttype == TT::PERCENT
+                                {
+                                    match self.get_operand_u8()
+                                    {
+                                        Ok(operand) =>
+                                        {
+                                            hex_code.push(operand);
+                                        },
+                                        Err(e) =>
+                                        {
+                                            // TODO: This should do error matching for
+                                            // IntErrorKind::PosOverflow to see if it might be a u16
+                                            println!("Error : {}", e);
+                                            panic!();
+
+                                        }
+
+                                    }
+
+                                    self.step();
+                                    self.step();
+                                    continue;
+                                }
+                            else if nt.ttype != TT::COMMA
+                                || nt.ttype != TT::DOLLAR
+                                || nt.ttype != TT::PERCENT
+                                || nt.ttype != TT::NUMBER
+                                {
+                                    break;
+                                }
+                            self.step();
+                            continue;
+                        }
+                        continue;
                     }
                     else if t.tstring == "DEC"
                     {
