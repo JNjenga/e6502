@@ -7,7 +7,7 @@
 
 This is what I am working towards:
 
- ![Watch the video](/screenshots/capture.mkv)
+[![Demo](/screenshots/demo.png)](/screenshots/capture.mkv)
 
 ## Features
 
