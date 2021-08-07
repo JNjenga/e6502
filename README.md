@@ -8,7 +8,8 @@
 This is what I am working towards:
 
 ![Demo](/screenshots/demo.png)
- 
+ [![Watch the video](/screenshots/demo.png)](/screenshots/capture.mkv)
+
 ## Features
 
 - 32x32 screen display
