@@ -5,7 +5,7 @@
 
 ## Demo
 
-This is what I am working towards:
+Watch demo below :
 
 [![Demo](https://img.youtube.com/vi/_xA88DMFr9M/0.jpg)](https://www.youtube.com/watch?v=_xA88DMFr9M)
 
