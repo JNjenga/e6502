@@ -7,7 +7,7 @@
 
 This is what I am working towards:
 
-[![Demo](/screenshots/demo.png)](/screenshots/capture.mkv)
+[![Demo](https://img.youtube.com/vi/_xA88DMFr9M/0.jpg)](https://www.youtube.com/watch?v=_xA88DMFr9M)
 
 ## Features
 
