@@ -1,8 +1,6 @@
 
 use crate::isa;
 
-// Flag bit masks
-#[allow(dead_code)]
 pub struct Cpu
 {
     pub a: u8,
@@ -14,7 +12,6 @@ pub struct Cpu
     pub mem: [u8;65536]
 }
 
-#[allow(dead_code)]
 impl Default for Cpu
 {
     fn default() -> Cpu
@@ -56,18 +53,11 @@ impl Cpu
         self.sr = 0;
     }
 
-    fn get_abs_address(&mut self) -> u16
-    {
-        let hsb = self.mem[usize::from(self.pc)];
-        let lsb = self.mem[usize::from(self.pc+1)];
-
-        let mut res: u16 = u16::from(hsb);
-        res = res << 8;
-        res = res | u16::from(lsb);
-        self.pc += 2;
-        res
-    }
-
+    /// Absolute addressing mode
+    ///
+    /// Data is accessed using 16-bit address specified as a constant
+    ///
+    /// e.g LDA $06D3 
     fn get_abs(&mut self) -> u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -80,6 +70,20 @@ impl Cpu
         self.mem[usize::from(res)]
     }
 
+    /// Absolute addressing mode but returns address of data
+    fn get_abs_address(&mut self) -> u16
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+        self.pc += 2;
+        res
+    }
+
+    /// Absolute addressing mode but returns reference to data 
     fn get_abs_ref(&mut self) -> &mut u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -92,6 +96,12 @@ impl Cpu
         &mut self.mem[usize::from(res)]
     }
 
+    /// Absolute,X addressing mode
+    ///
+    /// Data is accessed using 16-bit address specified as a constant,
+    /// to which the value of X register is added(with carry)
+    ///
+    /// e.g LDA $06D3,X
     fn get_absx(&mut self) -> u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -100,32 +110,53 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = res << 8;
         res = res | u16::from(lsb);
-        // Add with carry
-        let x = self.x;
-        let option = res.checked_add(u16::from(x));
 
-        match option
-        {
-            None => 
-            {
-                res = res.wrapping_add(u16::from(x));
-                self.sr |= Cpu::CarryFlag;
-            },
-            Some(value) =>
-            {
-                res = value;
-                self.sr &= !Cpu::CarryFlag;
-            }
-        }
-        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
-        {
-            res += 1;
-        }
+
+        res = res.wrapping_add(u16::from(self.x));
+
+        // // Add with carry
+        // let x = self.x;
+        // let option = res.checked_add(u16::from(x));
+
+        // match option
+        // {
+        //     None => 
+        //     {
+        //         res = res.wrapping_add(u16::from(x));
+        //         self.sr |= Cpu::CarryFlag;
+        //     },
+        //     Some(value) =>
+        //     {
+        //         res = value;
+        //         self.sr &= !Cpu::CarryFlag;
+        //     }
+        // }
+        // if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        // {
+        //     res += 1;
+        // }
 
         self.pc += 2;
         self.mem[usize::from(res)]
     }
 
+    /// Absolute,X addressing mode but returns address of data
+    fn get_absx_address(&mut self) -> u16
+    {
+        let hsb = self.mem[usize::from(self.pc)];
+        let lsb = self.mem[usize::from(self.pc+1)];
+
+        let mut res: u16 = u16::from(hsb);
+        res = res << 8;
+        res = res | u16::from(lsb);
+
+        res = res.wrapping_add(u16::from(self.x));
+
+        self.pc += 2;
+        res
+    }
+
+    /// Absolute,X addressing mode but returns reference to data 
     fn get_absx_ref(&mut self) -> &mut u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -160,41 +191,12 @@ impl Cpu
         &mut self.mem[usize::from(res)]
     }
 
-    fn get_absx_address(&mut self) -> u16
-    {
-        let hsb = self.mem[usize::from(self.pc)];
-        let lsb = self.mem[usize::from(self.pc+1)];
-
-        let mut res: u16 = u16::from(hsb);
-        res = res << 8;
-        res = res | u16::from(lsb);
-        // Add with carry
-        let x = self.x;
-        let option = res.checked_add(u16::from(x));
-
-        match option
-        {
-            None => 
-            {
-                res = res.wrapping_add(u16::from(x));
-                self.sr |= Cpu::CarryFlag;
-            },
-            Some(value) =>
-            {
-                res = value;
-                self.sr &= !Cpu::CarryFlag;
-            }
-        }
-        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
-        {
-            res += 1;
-        }
-
-
-        self.pc += 2;
-        res
-    }
-
+    /// Absolute,Y addressing mode
+    ///
+    /// Data is accessed using 16-bit address specified as a constant,
+    /// to which the value of Y register is added(with carry)
+    ///
+    /// e.g LDA $06D3,Y
     fn get_absy(&mut self) -> u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -228,6 +230,7 @@ impl Cpu
         self.mem[usize::from(res)]
     }
 
+    /// Absolute,Y addressing mode but returns address of data
     fn get_absy_address(&mut self) -> u16
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -261,6 +264,7 @@ impl Cpu
         res
     }
 
+    /// Absolute,Y addressing mode but returns reference of data
     fn get_absy_ref(&mut self) -> &mut u8
     {
         let hsb = self.mem[usize::from(self.pc)];
@@ -294,6 +298,11 @@ impl Cpu
         &mut self.mem[usize::from(res)]
     }
 
+    /// Immediate mode
+    ///
+    /// Data is accessed using byte following opcode.
+    ///
+    /// e.g LDA #$80
     fn get_imm(&mut self) -> u8
     {
         let value = self.mem[usize::from(self.pc)];
@@ -301,6 +310,12 @@ impl Cpu
         value
     }
 
+    /// Indirect mode
+    ///
+    /// Operand is address.
+    /// Data is contents of word at address. 
+    ///
+    /// e.g JMP ($9000) ; Jumps to the location pointed to by addresses $9000 (low) and $9001 (high)
     fn get_ind(&mut self) -> u16
     {
         let address_hsb = self.mem[usize::from(self.pc)];
@@ -320,19 +335,13 @@ impl Cpu
         res
     }
 
+    /// Indirect,X mode
+    ///
+    /// Add content of Y to addresss without carry(wrapped).
+    /// Address at result is used to access the data.
+    ///
+    /// e.g LDA($05,X)
     fn get_indx(&mut self) -> u8 
-    {
-        let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
-        address <<= 8;
-        address |= self.mem[usize::from(operand)] as u16;
-       address += self.x as u16;
-
-        self.pc += 1;
-        self.mem[usize::from(address)]
-    }
-
-    fn get_indx_ref(&mut self) -> &mut u8 
     {
         let operand = self.mem[usize::from(self.pc)];
         let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
@@ -341,9 +350,10 @@ impl Cpu
         address += self.x as u16;
 
         self.pc += 1;
-        &mut self.mem[usize::from(address)]
+        self.mem[usize::from(address)]
     }
 
+    /// Indirect,X addressing mode but returns address of data
     fn get_indx_address(&mut self) -> u16
     {
         let operand = self.mem[usize::from(self.pc)];
@@ -356,6 +366,25 @@ impl Cpu
         address
     }
 
+    /// Indirect,X addressing mode but returns reference of data
+    fn get_indx_ref(&mut self) -> &mut u8 
+    {
+        let operand = self.mem[usize::from(self.pc)];
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
+        address <<= 8;
+        address |= self.mem[usize::from(operand)] as u16;
+        address += self.x as u16;
+
+        self.pc += 1;
+        &mut self.mem[usize::from(address)]
+    }
+
+    /// Indirect,Y mode
+    ///
+    /// Add content of Y to addresss without carry(wrapped).
+    /// Address at result is used to access the data.
+    ///
+    /// e.g LDA($05),Y
     fn get_indy(&mut self) -> u8 
     {
         let operand = self.mem[usize::from(self.pc)];
@@ -368,18 +397,7 @@ impl Cpu
         self.mem[usize::from(address)]
     }
 
-    fn get_indy_ref(&mut self) -> &mut u8 
-    { 
-        let operand = self.mem[usize::from(self.pc)];
-        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
-        address <<= 8;
-        address |= self.mem[usize::from(operand)] as u16;
-        address += self.y as u16;
-
-        self.pc += 1;
-        &mut self.mem[usize::from(address)]
-    }
-
+    /// Indirect,Y addressing mode but returns addresss of data
     fn get_indy_address(&mut self) -> u16
     {
         let operand = self.mem[usize::from(self.pc)];
@@ -392,15 +410,46 @@ impl Cpu
         address
     }
 
+    /// Indirect,Y addressing mode but returns reference of data
+    fn get_indy_ref(&mut self) -> &mut u8 
+    { 
+        let operand = self.mem[usize::from(self.pc)];
+        let mut address: u16 = self.mem[usize::from(operand + 1)] as u16;
+        address <<= 8;
+        address |= self.mem[usize::from(operand)] as u16;
+        address += self.y as u16;
+
+        self.pc += 1;
+        &mut self.mem[usize::from(address)]
+    }
+
+    /// Relative mode
+    ///
+    /// Branch target is PC + signed offset of value
+    ///
+    /// e.g BPL $05
+    /// 
+    /// This fn works differently from the spec
+    /// Since the branching cannot occur for values >256
+    /// the value of the operand will be the lowest byte of the pc.
+    /// I might be wrong but this seems to work
     fn get_rel(&mut self) -> u16
     {
         let operand = self.mem[usize::from(self.pc)];
-        // TODO(James) : Make 0x600 not static value
-        let value = 0x600 + u16::from(operand);
+
+        let value = (self.pc >> 8) << 8;
+        let value = value | u16::from(operand);
+
         self.pc += 1;
+
         value
     }
 
+    /// Zeropage mode
+    ///
+    /// Similar to Absolute
+    ///
+    /// e.g LDA $39
     fn get_zp(&mut self) -> u8
     {
         let address = self.mem[usize::from(self.pc)];
@@ -408,13 +457,7 @@ impl Cpu
         self.mem[usize::from(address)]
     }
 
-    fn get_zp_ref(&mut self) -> &mut u8
-    {
-        let address = self.mem[usize::from(self.pc)];
-        self.pc += 1;
-        &mut self.mem[usize::from(address)]
-    }
-
+    /// Zero page addressing mode but returns address of data
     fn get_zp_address(&mut self) -> u16
     {
         let address = self.mem[usize::from(self.pc)];
@@ -422,6 +465,19 @@ impl Cpu
         u16::from(address)
     }
 
+    /// Zero page addressing mode but returns reference of data
+    fn get_zp_ref(&mut self) -> &mut u8
+    {
+        let address = self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        &mut self.mem[usize::from(address)]
+    }
+
+    /// Zeropage,X mode
+    ///
+    /// Similar to Absolute,X
+    ///
+    /// e.g STA $39,X
     fn get_zpx(&mut self) -> u8
     {
         let value = self.x + self.mem[usize::from(self.pc)];
@@ -429,13 +485,7 @@ impl Cpu
         self.mem[usize::from(value)]
     }
 
-    fn get_zpx_ref(&mut self) -> &mut u8
-    {
-        let value = self.x + self.mem[usize::from(self.pc)];
-        self.pc += 1;
-        &mut self.mem[usize::from(value)]
-    }
-
+    /// Zero page,X addressing mode but returns address of data
     fn get_zpx_address(&mut self) -> u16
     {
         let address = self.x + self.mem[usize::from(self.pc)];
@@ -443,6 +493,19 @@ impl Cpu
         u16::from(address)
     }
 
+    /// Zero page,X addressing mode but returns reference of data
+    fn get_zpx_ref(&mut self) -> &mut u8
+    {
+        let value = self.x + self.mem[usize::from(self.pc)];
+        self.pc += 1;
+        &mut self.mem[usize::from(value)]
+    }
+
+    /// Zeropage,Y mode
+    ///
+    /// Similar to Absolute,Y
+    ///
+    /// e.g STA $39,Y
     fn get_zpy(&mut self) -> u8
     {
         let value = self.y + self.mem[usize::from(self.pc)];
@@ -450,6 +513,7 @@ impl Cpu
         self.mem[usize::from(value)]
     }
 
+    /// Zero page,X addressing mode but returns reference of data
     fn get_zpy_ref(&mut self) -> &mut u8
     {
         let value = self.y + self.mem[usize::from(self.pc)];
@@ -457,6 +521,7 @@ impl Cpu
         &mut self.mem[usize::from(value)]
     }
 
+    /// Zero page,X addressing mode but returns address of data
     fn get_zpy_address(&mut self) -> u16
     {
         let address = self.y + self.mem[usize::from(self.pc)];
@@ -464,29 +529,36 @@ impl Cpu
         u16::from(address)
     }
 
+    /// Push an 8-bit value to the stack
     fn stack_push(&mut self, value : u8)
     {
+        // println!("Stack push {:#4x} at {:#4x}", value, self.pc);
         self.mem[usize::from(0x100 + u16::from(self.sp))] = value;
         self.sp = self.sp.wrapping_sub(1);
     }
 
+    /// Push a 16-bit value to the stack
     fn stack_push_16(&mut self, value : u16)
     {
+        // println!("Stack push {:#4x} at {:#4x}", value, self.pc);
         self.mem[usize::from(0x100 + u16::from(self.sp))] = (value >> 8 ) as u8;
         self.sp = self.sp.wrapping_sub(1);
         self.mem[usize::from(0x100 + u16::from(self.sp))]  = ((value << 8) >> 8) as u8;
         self.sp = self.sp.wrapping_sub(1);
     }
 
+    /// Pop an 8-bit value to the stack
     fn stack_pop(&mut self) -> u8
     {
         self.sp = self.sp.wrapping_add(1);
         let value = self.mem[usize::from(0x100 + u16::from(self.sp))];
         self.mem[usize::from(0x100 + u16::from(self.sp))] = 0;
 
+        // println!("Stack pop {:#4x} at {:#4x}", value, self.pc);
         value
     }
 
+    /// Pop a 16-bit value to the stack (2 8-bit pops)
     fn stack_pop_16(&mut self) -> u16
     {
         self.sp = self.sp.wrapping_add(1);
@@ -499,9 +571,11 @@ impl Cpu
         let mut res: u16 = u16::from(hsb);
         res = (res << 8) | u16::from(lsb);
 
+        // println!("Stack pop {:#4x} at {:#4x}", res, self.pc);
         res
     }
 
+    /// Set the zero flag, clear if `clear` is set
     #[inline(always)]
     fn set_zerof(&mut self, value: u8, clear : bool)
     {
@@ -515,6 +589,7 @@ impl Cpu
         }
     }
 
+    /// Set the negative flag, clear if `clear` is set
     #[inline(always)]
     fn set_negf(&mut self, value: u8, clear : bool)
     {
@@ -528,17 +603,29 @@ impl Cpu
         }
     }
 
+    /// Set the overflow flag, clear if `clear` is set
     fn set_vflag(&mut self, prev_value:u8, value:u8)
     {
-        if prev_value &  0b01000000 == 0b01000000
-            && value & 0b10000000 == 0b10000000
-            {
-                self.sr |= Cpu::OverFlowFlag;
-            }
+        let bit_six_prev = (prev_value & 0b01000000 ) >> 6;
+        let bit_six = (value & 0b01000000 ) >> 6;
+
+        if bit_six_prev != bit_six
+        {
+            self.sr |= Cpu::OverFlowFlag;
+        }
         else
         {
             self.sr &= !Cpu::OverFlowFlag;
         }
+        // if prev_value &  0b01000000 == 0b01000000
+        //     && value & 0b10000000 == 0b10000000
+        //     {
+        //         self.sr |= Cpu::OverFlowFlag;
+        //     }
+        // else
+        // {
+        //     self.sr &= !Cpu::OverFlowFlag;
+        // }
     }
 
     pub fn push_instruction(&mut self, instruction : u8, operand: u8)
@@ -612,11 +699,17 @@ impl Cpu
             {
                 let operand = self.get_absx();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::AND_ABSY =>
             {
                 let operand = self.get_absy();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::AND_IMM =>
             {
@@ -630,21 +723,33 @@ impl Cpu
             {
                 let operand = self.get_indx();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::AND_INDY =>
             {
                 let operand = self.get_indy();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::AND_ZP =>
             {
                 let operand = self.get_zp();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::AND_ZPX =>
             {
                 let operand = self.get_zpx();
                 self.a &= operand;
+
+                self.set_zerof(self.a, true);
+                self.set_negf(self.a, true);
             },
             isa::Instruction::ASL_ACC =>
             {
@@ -756,7 +861,6 @@ impl Cpu
             isa::Instruction::BRK_IMP =>
             {
                 self.sr |= Cpu::BreakFlag;
-                self.pc += 1;
             },
             isa::Instruction::BVC_REL | isa::Instruction::BVC_REL_16 =>
             {
@@ -970,25 +1074,30 @@ impl Cpu
             {
                 self.y = self.y.wrapping_add(1);
 
-                self.set_zerof(self.y, false);
+                self.set_zerof(self.y, true);
                 self.set_negf(self.y, true);
             },
             isa::Instruction::JMP_ABS =>
             {
                 let operand = self.get_abs_address();
-                self.pc = 0x600 + operand;
+
+                self.pc = operand;
+                // self.pc = operand;
             },
             isa::Instruction::JMP_IND =>
             {
                 let operand = self.get_ind();
-                self.pc = 0x600 + operand;
+                // self.pc = 0x600 + operand;
+
+                self.pc = operand;
             },
             isa::Instruction::JSR_ABS =>
             {
                 let operand = self.get_abs_address();
 
                 self.stack_push_16(self.pc);
-                self.pc = 0x600 + operand;
+                self.pc = operand;
+                // println!("Jumping to {:#4x} {:#4x}", self.pc, 0x600 + operand);
             },
             isa::Instruction::LDA_ABS =>
             {
@@ -1001,9 +1110,11 @@ impl Cpu
             },
             isa::Instruction::LDA_ABSX =>
             {
-                let operand = self.get_absx();
+                let operand = self.get_absx_address();
 
-                self.a = operand;
+
+                self.a = self.mem[usize::from(operand)];
+                println!("Loading value {:#4x} from {:#4x}", self.mem[usize::from(operand)], operand);
 
                 self.set_zerof(self.a, true);
                 self.set_negf(self.a, true);
@@ -1192,7 +1303,6 @@ impl Cpu
             },
             isa::Instruction::NOP_IMP =>
             {
-                self.pc += 1;
             },
             isa::Instruction::ORA_ABS =>
             {
@@ -1327,7 +1437,7 @@ impl Cpu
             isa::Instruction::RTS_IMP =>
             {
                 let operand = self.stack_pop_16();
-                self.pc = operand + 1;
+                self.pc = operand;
             },
             isa::Instruction::SBC_ABS =>
             {
@@ -1427,7 +1537,7 @@ impl Cpu
             isa::Instruction::STX_ABS =>
             {
                 let val = self.x;
-                let operand = self.get_zpx_ref();
+                let operand = self.get_abs_ref();
                 *operand = val;
             },
             isa::Instruction::STX_ZP =>
@@ -1509,27 +1619,69 @@ impl Cpu
     {
         let prev_a = self.a;
         let option = self.a.checked_add(operand);
+        match option
+        {
+            None => 
+            {
+                // Overflowed
+                // let sum : u16 = u16::from(self.a) + u16::from(operand) + 1;
+                // self.a = (sum - 255_u16) as u8;
+                self.a = self.a.wrapping_add(operand);
+                if self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+                {
+                    self.a += 1;
+                }
+                self.sr |= Cpu::CarryFlag;
+            },
+            Some(_value) =>
+            {
+                self.a = self.a.wrapping_add(operand);
+                if self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+                {
+                    self.a += 1;
+                    self.sr &= !Cpu::CarryFlag;
+                }
+            }
+        }
+
+        self.set_negf(self.a, true);
+        self.set_vflag(prev_a,self.a);
+        self.set_zerof(self.a, true);
+    }
+    #[inline(always)]
+    fn adci(&mut self, operand : u8)
+    {
+        let prev_a = self.a;
+        let option = self.a.checked_add(operand);
 
         match option
         {
             None => 
             {
                 self.a = self.a.wrapping_add(operand);
+        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            self.a += 1;
+        }
                 self.sr |= Cpu::CarryFlag;
             },
             Some(value) =>
             {
                 self.a = value;
+                if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+                {
+                    self.a = self.a.wrapping_add(1);
+                }
                 self.sr &= !Cpu::CarryFlag;
             }
-        }
-        if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
-        {
-            self.a += 1;
         }
 
 
         self.set_vflag(prev_a, self.a);
+        if prev_a > self.a
+        {
+                self.sr |= Cpu::OverFlowFlag;
+        }
         self.set_negf(self.a, true);
         self.set_zerof(self.a, true);
     }
@@ -1684,38 +1836,34 @@ impl Cpu
         res
     }
 
+    // Ref : [SO question](https://stackoverflow.com/questions/41253124/i-cant-understand-some-instructions-in-arm-sbc-rsc)
     #[inline(always)]
-    fn sbc(&mut self, operand: u8)
+    fn sbc(&mut self, operand : u8)
     {
         let prev_a = self.a;
-        let option = self.a.checked_sub(operand);
+        let option = self.a.checked_add(!operand + 1);
+
+        self.a = self.a.wrapping_add(!operand) ;
+
+        if self.sr & Cpu::CarryFlag == Cpu::CarryFlag
+        {
+            self.a = self.a.wrapping_add(1) ;
+        }
 
         match option
         {
-            None => 
+            None =>
             {
-                self.a = self.a.wrapping_sub(operand);
-                if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
-                {
-                    self.a -= 1;
-                }
-
                 self.sr |= Cpu::CarryFlag;
             },
-            Some(value) =>
+            Some(_) =>
             {
-                self.a = value;
-                if  self.sr & Cpu::CarryFlag == Cpu::CarryFlag
-                {
-                    self.a = self.a.wrapping_sub(1);
-                }
-
                 self.sr &= !Cpu::CarryFlag;
             }
         }
 
-        self.set_vflag(prev_a, self.a);
         self.set_negf(self.a, true);
+        self.set_vflag(prev_a,self.a);
         self.set_zerof(self.a, true);
     }
 

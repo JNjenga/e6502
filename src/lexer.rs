@@ -271,11 +271,33 @@ impl Lexer
             {
                 if nt.ttype == TT::BRACKETOPEN
                 {
-
                     return Mode::IND;
                 }
                 else
                 {
+                    if let Some(nt2) = self.nextx(2)
+                    {
+                        if nt2.ttype == TT::COMMA
+                        {
+                            if let Some(nt3) = self.nextx(3)
+                            {
+                                    if nt3.ttype == TT::REGX
+                                    {
+                                        return Mode::ABSX;
+                                    }
+                                    else if nt3.ttype == TT::REGY
+                                    {
+                                        return Mode::ABSY;
+                                    }
+                                    else
+                                    {
+                                        return Mode::UNKNOWN;
+                                    }
+                            }
+
+                            return Mode::ABSX;
+                        }
+                    }
                     return Mode::ABS;
                 }
             }
@@ -508,7 +530,6 @@ impl Lexer
             }
         }
 
-
         // Add labels to labels table
         self.current_token = 0;
         let mut mem_index = 0;
@@ -527,7 +548,16 @@ impl Lexer
                 if t.ttype == TT::INSTRUCTION
                 {
                     mem_index += 1;
+
                     let mode = self.next_mode();
+
+                    if t.tstring == "JSR"
+                    {
+                        mem_index += 2;
+                        self.step();
+                        continue;
+                    }
+
                     match mode 
                     {
 
@@ -547,10 +577,11 @@ impl Lexer
                         {
                             if t.tstring != "DCB"
                             {
-                            panic!("Unknown addressing mode")
+                                panic!("Unknown addressing mode")
                             }
                         },
                     }
+
                     self.step();
                     continue;
                 }
@@ -569,17 +600,17 @@ impl Lexer
                                     valid = false;
                                     break;
                                 }
+                                else if tc > '9' && tc < 'A'
+                                {
+                                    valid = false;
+                                    break;
+                                }
                                 else if tc > 'f'
                                 {
                                     valid = false;
                                     break;
                                 }
-                                else if tc < 'a' && tc > 'A'
-                                {
-                                    valid = false;
-                                    break;
-                                }
-                                else if tc < 'F' && tc > 'A'
+                                else if tc < 'a' && tc > 'F'
                                 {
                                     valid = false;
                                     break;
@@ -591,6 +622,7 @@ impl Lexer
                                 // println!("Type: {:?}, String : {:?}, Line No : {}", nt.ttype, nt.tstring, nt.line_no);
                                 self.tokens[self.current_token].ttype = TT::NUMBER;
                             }
+
                         },
                         Some(_) => {}
                     }
@@ -623,7 +655,7 @@ impl Lexer
                         Some(&value) => { 
                             self.tokens[self.current_token].ttype = TT::LABEL_OPERAND;
                             // println!("Label replace: {} set to value :{} line_no {}", self.tokens[self.current_token].tstring, value, self.tokens[self.current_token].line_no);
-                            self.tokens[self.current_token].tstring = format!("{:x}",value);
+                            self.tokens[self.current_token].tstring = format!("{:x}",value + 0x600);
                         },
                         None =>
                         {
@@ -645,6 +677,7 @@ impl Lexer
         self.current_token = 0;
 
         let mut hex_code: Vec<u8> = vec![];
+
         // Second pass : Create the instructions vector
         loop 
         {
@@ -1303,15 +1336,14 @@ impl Lexer
                                     },
                                     Err(_e) =>
                                     {
-                                        // TODO: This should do error matching for
-                                        // IntErrorKind::PosOverflow to see if it might be a u16
+                                        // REL should not use a 16-bit value
+                                        // So convert it to 8-bit, use lower bytes
+                                        // This is neccessary since we add 0x600 to every label
                                         match self.get_operand_u16()
                                         {
                                             Ok(operand) =>
                                             {
-                                                let hsb:u8 = (operand << 8) as u8;
                                                 let lsb:u8 = operand as u8;
-                                                hex_code.push(hsb);
                                                 hex_code.push(lsb);
                                             },
                                             Err(e) =>
