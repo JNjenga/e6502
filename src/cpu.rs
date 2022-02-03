@@ -1112,9 +1112,7 @@ impl Cpu
             {
                 let operand = self.get_absx_address();
 
-
                 self.a = self.mem[usize::from(operand)];
-                println!("Loading value {:#4x} from {:#4x}", self.mem[usize::from(operand)], operand);
 
                 self.set_zerof(self.a, true);
                 self.set_negf(self.a, true);
